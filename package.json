@@ -10,6 +10,8 @@
   "main": "index.js",
   "scripts": {
     "sync:types": "node scripts/sync-types.js",
+    "build:frontend": "npm run sync:types && npm run build --workspace frontend",
+    "build:api": "npm run sync:types && npm run build --workspace api",
     "dev": "npm run sync:types && npm run dev --workspaces",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
