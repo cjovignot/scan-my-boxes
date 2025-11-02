@@ -1,26 +1,12 @@
 import express from "express";
 import cors from "cors";
+import exampleRouter from "./routes/example.js";
 import { connectDB } from "./utils/db.js";
-import serverless from "serverless-http";
 
 const app = express();
-
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://scan-my-boxes-frontend.vercel.app/",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
-
-app.get("/api/hello", (req, res) => {
-  res.json({ message: "Hello from Vercel!" });
-});
-
+app.use("/api/example", exampleRouter);
 connectDB();
 
-// 👇 C’est ça la différence : on exporte le handler
-export const handler = serverless(app);
+export default app; // 👈 Pas app.listen() !
