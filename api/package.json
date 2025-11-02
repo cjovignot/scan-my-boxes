@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "ts-node index.ts"
+    "dev": "npm run sync:types --prefix .. && ts-node index.ts"
   },
   "dependencies": {
     "cloudinary": "^1.41.3",
