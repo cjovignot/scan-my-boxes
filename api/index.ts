@@ -1,23 +1,26 @@
 import express from "express";
 import cors from "cors";
-import exampleRouter from "./routes/example.ts";
-import { connectDB } from "./utils/db.ts";
+import { connectDB } from "./utils/db.js";
+import serverless from "serverless-http";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://scan-my-boxes-frontend.vercel.app/",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-app.use("/api/example", exampleRouter);
+app.get("/api/hello", (req, res) => {
+  res.json({ message: "Hello from Vercel!" });
+});
 
 connectDB();
 
-// ✅ Démarrage local seulement
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running locally on http://localhost:${PORT}`);
-  });
-}
-
-export default app;
+// 👇 C’est ça la différence : on exporte le handler
+export const handler = serverless(app);
