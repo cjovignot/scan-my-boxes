@@ -6,26 +6,26 @@ import "./App.css";
 function App() {
   const [message, setMessage] = useState<string>("Loading...");
 
-  // useEffect(() => {
-  //   const apiUrl = import.meta.env.VITE_API_URL;
-  //   fetch(`${apiUrl}/api/example`)
-  //     .then((res) => res.json())
-  //     .then((data) => setMessage(data.message))
-  //     .catch((err) => {
-  //       console.error("❌ Error fetching API:", err);
-  //       setMessage("Error connecting to API");
-  //     });
-  // }, []);
-
   useEffect(() => {
-    fetch("https://scan-my-boxes-api.vercel.app/api/example")
+    const apiUrl = import.meta.env.VITE_API_URL;
+    fetch(`${apiUrl}/api/example`)
       .then((res) => res.json())
-      .then((data) => console.log(data))
+      .then((data) => setMessage(data.message))
       .catch((err) => {
         console.error("❌ Error fetching API:", err);
         setMessage("Error connecting to API");
       });
   }, []);
+
+  // useEffect(() => {
+  //   fetch("https://scan-my-boxes-api.vercel.app/api/example")
+  //     .then((res) => res.json())
+  //     .then((data) => console.log(data))
+  //     .catch((err) => {
+  //       console.error("❌ Error fetching API:", err);
+  //       setMessage("Error connecting to API");
+  //     });
+  // }, []);
 
   return (
     <>
