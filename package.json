@@ -9,6 +9,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "sync:types": "node scripts/sync-types.js",
+    "dev": "npm run sync:types && npm run dev --workspaces",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
