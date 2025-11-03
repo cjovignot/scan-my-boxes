@@ -19,6 +19,7 @@ function App() {
       </div>
 
       <h1>Vite + React + API</h1>
+      <div>HEY</div>
 
       <div className="card">
         {loading && <p>⏳ Chargement des données...</p>}
