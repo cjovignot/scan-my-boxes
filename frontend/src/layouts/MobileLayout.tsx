@@ -3,7 +3,7 @@ import BottomNav from "../components/BottomNav";
 
 const MobileLayout = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col h-auto">
       {/* Contenu scrollable */}
       <div className="flex-1 pb-20 overflow-y-auto">
         <Outlet />

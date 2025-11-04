@@ -7,9 +7,9 @@ const Home = () => {
   return (
     <>
       <PageWrapper>
-        <h1>Vite + React + API</h1>
+        <h1 className="!text-4xl">Scan my Boxes</h1>
 
-        <div className="card">
+        <div className="mt-10 card">
           {loading && <p>⏳ Chargement des données...</p>}
           {error && <p style={{ color: "red" }}>❌ {error}</p>}
           {data && (
