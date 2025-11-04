@@ -40,10 +40,10 @@ const BottomNav = () => {
   layout
   animate={{
     width: isActive ? "auto" : 0,
-    marginLeft: isActive ? 6 : -10,
+    marginLeft: isActive ? 5 : -10,
   }}
   transition={{
-    delay: isActive ? 0.40 : 0, // 👈 Delay appliqué UNIQUEMENT quand on active
+    delay: isActive ? 0.70 : 0, // 👈 Delay appliqué UNIQUEMENT quand on active
     type: "spring",
     stiffness: 260,
     damping: 22,
