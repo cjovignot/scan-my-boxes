@@ -26,7 +26,11 @@ const BottomNav = () => {
               <motion.div
                 layout
                 animate={{ scale: isActive ? 1.1 : 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                transition={{
+                    delay: isActive ? 0.1 : 0,
+                    type: "spring",
+                    stiffness: 260, damping: 20
+                }}
               >
                 {item.icon}
               </motion.div>
