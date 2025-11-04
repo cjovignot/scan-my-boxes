@@ -40,17 +40,17 @@ const BottomNav = () => {
   layout
   animate={{
     width: isActive ? "auto" : 0,
-    marginLeft: isActive ? 5 : -8,
+    marginLeft: 2,
   }}
   transition={{
-    delay: isActive ? 0.40 : 0.40, // 👈 Delay appliqué UNIQUEMENT quand on active
+    delay: isActive ? 0.15 : 0.15, // 👈 Delay appliqué UNIQUEMENT quand on active
     type: "spring",
     stiffness: 260,
     damping: 22,
   }}
   className="overflow-hidden"
 >
-  <span className="flex items-center text-[11px] font-light whitespace-nowrap">
+  <span className="flex overflow-hidden items-center text-[11px] font-light whitespace-nowrap">
     {item.label}
   </span>
 </motion.div>
