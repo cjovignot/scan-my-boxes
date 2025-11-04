@@ -25,7 +25,6 @@ const BottomNav = () => {
               {/* Icône */}
               <motion.div
                 layout
-                animate={{ scale: isActive ? 1.1 : 1 }}
                 transition={{
                     delay: isActive ? 0.1 : 0,
                     type: "spring",
