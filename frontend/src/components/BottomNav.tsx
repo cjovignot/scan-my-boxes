@@ -36,19 +36,24 @@ const BottomNav = () => {
               </motion.div>
 
               {/* Conteneur du texte avec largeur animée */}
-              <motion.div
-                layout
-                animate={{
-                  width: isActive ? "auto" : 0,
-                  marginLeft: isActive ? 6 : 0,
-                }}
-                transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                className="overflow-hidden" // ✨ Révélation de gauche → droite
-              >
-                <span className="text-[11px] font-light whitespace-nowrap">
-                  {item.label}
-                </span>
-              </motion.div>
+           <motion.div
+  layout
+  animate={{
+    width: isActive ? "auto" : 0,
+    marginLeft: isActive ? 6 : 0,
+  }}
+  transition={{
+    delay: isActive ? 0.12 : 0, // 👈 Delay appliqué UNIQUEMENT quand on active
+    type: "spring",
+    stiffness: 260,
+    damping: 22,
+  }}
+  className="overflow-hidden"
+>
+  <span className="flex items-center text-[11px] font-light whitespace-nowrap">
+    {item.label}
+  </span>
+</motion.div>
             </motion.div>
           )}
         </NavLink>
