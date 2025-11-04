@@ -20,31 +20,37 @@ const BottomNav = () => {
           {({ isActive }) => (
             <motion.div
               layout
-              className={`flex items-center px-3 py-2 transition-colors ${
-                isActive ? "!bg-gray-400 rounded-full text-gray-900" : "!text-gray-300"
-              }`}
-              animate={{ width: isActive ? "auto" : "44px" }}  // 👈 largeur dynamique
-              transition={{ type: "spring", stiffness: 260, damping: 18 }}
+              className="flex items-center justify-center px-3 py-2"
+              animate={{
+                backgroundColor: isActive ? "rgba(156,163,175,1)" : "rgba(0,0,0,0)",
+                borderRadius: isActive ? "9999px" : "9999px",
+              }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
             >
               {/* Icône */}
               <motion.div
                 layout
-                animate={{ x: isActive ? 0 : 0, scale: isActive ? 1.1 : 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                animate={{ scale: isActive ? 1.1 : 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="flex items-center justify-center"
               >
                 {item.icon}
               </motion.div>
 
-              {/* Label glissé depuis la droite */}
+              {/* Label */}
               <motion.span
                 layout
                 initial={false}
                 animate={{
                   opacity: isActive ? 1 : 0,
-                  x: isActive ? 6 : 12,
+                  width: isActive ? "auto" : 0,
+                  x: isActive ? 6 : 0,
                 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                className="text-[11px] font-light whitespace-nowrap ml-1"
+                transition={{
+                  opacity: { duration: 0.2 },
+                  x: { type: "spring", stiffness: 260, damping: 20 }
+                }}
+                className="text-[11px] font-light whitespace-nowrap overflow-hidden ml-1"
               >
                 {item.label}
               </motion.span>
@@ -53,13 +59,13 @@ const BottomNav = () => {
         </NavLink>
       ))}
 
-      {/* FAB CENTRALE */}
+      {/* FAB CENTRE */}
       <motion.button
         whileTap={{ scale: 0.9 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
         onClick={handleFabClick}
-        className="fixed !p-3 h-auto w-auto text-white bottom-7 !bg-gray-900 !rounded-full"
+        className="fixed bottom-7 !p-3 text-white !bg-gray-900 !rounded-full"
       >
         <ScanQrCode size={32} />
       </motion.button>
