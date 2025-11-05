@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import serverless from "serverless-http";
 import exampleRouter from "./routes/example";
+import userRouter from "./routes/user";
 import { connectDB } from "./utils/db";
 import "dotenv/config";
 
@@ -41,6 +42,7 @@ app.use(express.json());
 
 // ✅ Routes
 app.use("/api/example", exampleRouter);
+app.use("/api/user", userRouter);
 
 // ✅ Database
 connectDB();

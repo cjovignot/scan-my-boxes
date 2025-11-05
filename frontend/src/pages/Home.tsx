@@ -5,24 +5,37 @@ const Home = () => {
   const { data, loading, error } = useApi<{ message: string }>("/api/example");
 
   return (
-    <>
-      <PageWrapper>
-        <h1 className="!text-4xl">Scan my Boxes</h1>
+    <PageWrapper>
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-10 text-white bg-gray-950">
+        {/* Titre principal */}
+        <h1 className="mb-6 text-4xl font-bold text-center text-yellow-400">
+          🚀 Scan My Boxes
+        </h1>
 
-        <div className="mt-10 card">
-          {loading && <p>⏳ Chargement des données...</p>}
-          {error && <p style={{ color: "red" }}>❌ {error}</p>}
+        {/* Carte de contenu */}
+        <div className="w-full max-w-md p-6 bg-gray-900 border border-gray-800 shadow-lg rounded-2xl">
+          {loading && (
+            <p className="text-center text-gray-400">
+              ⏳ Chargement des données...
+            </p>
+          )}
+          {error && <p className="text-center text-red-400">❌ {error}</p>}
           {data && (
-            <>
-              <p>🛰️ Réponse de l’API :</p>
-              <code>{data.message}</code>
-            </>
+            <div className="text-center">
+              <p className="mb-2 text-gray-300">🛰️ Réponse de l’API :</p>
+              <code className="px-3 py-1 text-yellow-400 bg-gray-800 rounded-md">
+                {data.message}
+              </code>
+            </div>
           )}
         </div>
 
-        <p className="read-the-docs">Click on the logos to learn more</p>
-      </PageWrapper>
-    </>
+        {/* Note ou footer */}
+        <p className="mt-10 text-sm text-center text-gray-500">
+          Cliquez sur les icônes pour en savoir plus.
+        </p>
+      </div>
+    </PageWrapper>
   );
 };
 

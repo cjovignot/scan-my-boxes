@@ -1,4 +1,13 @@
 @import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+  background-color: #0a0a0a; /* équivaut à bg-gray-950 */
+  color: white;
+}
+
 /* 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

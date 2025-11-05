@@ -1,77 +1,91 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, User, ScanQrCode } from "lucide-react";
+import { Home, User, ScanQrCode, KeyRound } from "lucide-react";
 
 const BottomNav = () => {
-  const navItems = [
+  const navItemsLeft = [
     { to: "/", icon: <Home size={22} strokeWidth={0.75} />, label: "Accueil" },
+  ];
+
+  const navItemsRight = [
     {
       to: "/profile",
       icon: <User size={22} strokeWidth={0.75} />,
       label: "Profil",
+    },
+    {
+      to: "/register",
+      icon: <KeyRound size={22} strokeWidth={0.75} />,
+      label: "Inscription",
     },
   ];
 
   const handleFabClick = () => alert("🚀 Action rapide !");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around py-4 bg-gray-800 shadow-md md:hidden">
-      {navItems.map((item) => (
-        <NavLink key={item.to} to={item.to}>
-          {({ isActive }) => (
-            <motion.div
-              layout
-              className={`flex items-center transition-colors ${
-                !isActive ? "text-gray-400" : "text-yellow-400"
-              }`}
-            >
-              {/* Icône */}
-              <motion.div
-                layout
-                transition={{
-                  delay: isActive ? 0.1 : 0,
-                  type: "spring",
-                  stiffness: 260,
-                  damping: 20,
-                }}
-              >
-                {item.icon}
-              </motion.div>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-800 shadow-lg md:hidden">
+      <div className="relative flex items-center justify-between py-3">
+        {/* Bloc gauche */}
+        <div className="flex flex-1 justify-evenly">
+          {navItemsLeft.map((item) => (
+            <NavLink key={item.to} to={item.to}>
+              {({ isActive }) => (
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  animate={{ scale: isActive ? 1.15 : 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20,
+                  }}
+                  className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                    isActive ? "text-yellow-400" : "text-gray-400"
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-[11px] font-light">{item.label}</span>
+                </motion.div>
+              )}
+            </NavLink>
+          ))}
+        </div>
 
-              {/* Label révélé de gauche -> droite */}
-              <motion.div
-                layout
-                animate={{
-                  width: isActive ? "auto" : 0,
-                  marginLeft: isActive ? 1 : 0,
-                }}
-                transition={{
-                  delay: isActive ? 0.1 : 0,
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 22,
-                }}
-                className="overflow-hidden"
-              >
-                <span className="text-[11px] font-light whitespace-nowrap">
-                  {item.label}
-                </span>
-              </motion.div>
-            </motion.div>
-          )}
-        </NavLink>
-      ))}
+        {/* FAB (centré au-dessus de la nav) */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          onClick={handleFabClick}
+          className="absolute p-3 text-white -translate-x-1/2 bg-black border border-gray-700 rounded-full shadow-lg left-1/2 -top-8"
+        >
+          <ScanQrCode size={32} />
+        </motion.button>
 
-      {/* FAB centre */}
-      <motion.button
-        whileTap={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        onClick={handleFabClick}
-        className="fixed p-3 text-white bg-gray-900 rounded-full bottom-7"
-      >
-        <ScanQrCode size={32} />
-      </motion.button>
+        {/* Bloc droit */}
+        <div className="flex flex-1 justify-evenly">
+          {navItemsRight.map((item) => (
+            <NavLink key={item.to} to={item.to}>
+              {({ isActive }) => (
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  animate={{ scale: isActive ? 1.15 : 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20,
+                  }}
+                  className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                    isActive ? "text-yellow-400" : "text-gray-400"
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-[11px] font-light">{item.label}</span>
+                </motion.div>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </div>
     </nav>
   );
 };
