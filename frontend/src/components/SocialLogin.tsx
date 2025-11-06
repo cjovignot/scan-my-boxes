@@ -1,65 +1,62 @@
 // frontend/components/SocialLogin.tsx
+"use client";
+
 import { useEffect } from "react";
-import jwtDecode from "jwt-decode";
+import GoogleOneTap from "google-one-tap";
+import AppleLogin from "react-apple-login";
 
-declare global {
-  interface Window {
-    google?: any;
-    AppleID?: any;
-  }
-}
-
-type Props = {
-  onLogin: (data: { provider: "google" | "apple"; token: string; profile?: any }) => void;
+type SocialLoginProps = {
+  onLogin: (data: { provider: string; token: string; profile?: any }) => void;
 };
 
-export const SocialLogin = ({ onLogin }: Props) => {
-  // GOOGLE
+export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
+  // --- GOOGLE ONE TAP ---
   useEffect(() => {
-    if (!window.google) return;
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
+    if (!googleClientId) return;
 
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    const googleOneTap = new GoogleOneTap({
+      client_id: googleClientId,
+      auto_select: false,
+      cancel_on_tap_outside: true,
       callback: (response: any) => {
-        const token = response.credential;
-        const profile = jwtDecode(token);
-        onLogin({ provider: "google", token, profile });
+        onLogin({ provider: "google", token: response.credential });
       },
     });
 
-    window.google.accounts.id.renderButton(
-      document.getElementById("google-btn"),
-      {
-        theme: "filled_black",
-        size: "large",
-        shape: "pill",
-      }
-    );
-  }, []);
+    googleOneTap.show();
 
-  // APPLE / iCloud
-  const loginWithApple = async () => {
-    try {
-      const res = await window.AppleID.auth.signIn();
-      const token = res.authorization.id_token;
-      onLogin({ provider: "apple", token });
-    } catch (err) {
-      console.error("Erreur Apple Sign-In:", err);
-    }
+    return () => googleOneTap.hide();
+  }, [onLogin]);
+
+  // --- APPLE LOGIN ---
+  const handleAppleSuccess = (response: any) => {
+    onLogin({
+      provider: "apple",
+      token: response.authorization.code,
+      profile: response.user,
+    });
   };
 
   return (
-    <div className="space-y-3 flex flex-col items-center">
-      {/* BOUTON GOOGLE */}
-      <div id="google-btn" />
-
-      {/* BOUTON APPLE */}
-      <button
-        onClick={loginWithApple}
-        className="px-4 py-2 rounded bg-white text-black font-semibold shadow-md hover:bg-gray-200 transition"
-      >
-        Continuer avec Apple
-      </button>
+    <div className="flex flex-col gap-3 mt-4">
+      {/* Apple Sign In */}
+      <AppleLogin
+        clientId={process.env.NEXT_PUBLIC_APPLE_CLIENT_ID!}
+        redirectURI={process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI!}
+        responseType="code"
+        responseMode="query"
+        usePopup={true}
+        designProp={{
+          height: 40,
+          width: 250,
+          color: "black",
+          border: false,
+          type: "sign-in",
+        }}
+        onSuccess={handleAppleSuccess}
+        onFailure={(err) => console.error("Apple login error:", err)}
+      />
     </div>
   );
 };
