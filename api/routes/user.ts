@@ -82,4 +82,22 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// ✅ DELETE - suppression d’un utilisateur
+router.delete("/:id", async (req, res) => {
+  await connectDB();
+
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur introuvable." });
+    }
+
+    res.json({ message: "🗑️ Utilisateur supprimé avec succès" });
+  } catch (error) {
+    console.error("Erreur suppression user:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 export default router;
