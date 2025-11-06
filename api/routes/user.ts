@@ -87,16 +87,16 @@ router.delete("/:id", async (req, res) => {
   await connectDB();
 
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
 
-    if (!user) {
+    if (!deletedUser) {
       return res.status(404).json({ error: "Utilisateur introuvable." });
     }
 
-    res.json({ message: "🗑️ Utilisateur supprimé avec succès" });
+    res.json({ message: "🗑️ Utilisateur supprimé." });
   } catch (error) {
     console.error("Erreur suppression user:", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    res.status(500).json({ error: "Erreur serveur." });
   }
 });
 
