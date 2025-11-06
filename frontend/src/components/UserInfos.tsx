@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApi } from "../hooks/useApi";
-import { EditUserModal } from "./EditUserModal"; // 👈 ajoute l'import
+import { useApiMutation } from "../hooks/useApiMutation"; // 👈 ajouter
+import { EditUserModal } from "./EditUserModal";
 
 interface User {
   _id: string;
@@ -19,6 +20,29 @@ const UserInfos = () => {
 
   const closeModal = () => {
     setSelectedUserId(null);
+  };
+
+  // ✅ Mutation suppression
+  const { mutate: deleteUser } = useApiMutation<{ message: string }, undefined>(
+    "/api/user", // endpoint de base auquel on rajoutera l'ID
+    "DELETE",
+    {
+      onSuccess: () => {
+        refetch(); // 🔄 Rafraîchir la liste
+      },
+      onError: () => {
+        alert("Erreur lors de la suppression.");
+      },
+    }
+  );
+
+  const handleDelete = async (id: string) => {
+    const ok = confirm("⚠️ Es-tu sûr de vouloir supprimer cet utilisateur ?");
+    if (!ok) return;
+
+    await deleteUser(undefined, {
+      url: `/api/user/${id}`, // 👈 override URL propre
+    } as any);
   };
 
   return (
@@ -48,13 +72,23 @@ const UserInfos = () => {
                 )}
               </div>
 
-              {/* Bouton Modifier */}
-              <button
-                onClick={() => handleEdit(user._id)}
-                className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-400"
-              >
-                Modifier
-              </button>
+              <div className="flex gap-2">
+                {/* Bouton Modifier */}
+                <button
+                  onClick={() => handleEdit(user._id)}
+                  className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-400"
+                >
+                  Modifier
+                </button>
+
+                {/* 🗑️ Bouton Supprimer */}
+                <button
+                  onClick={() => handleDelete(user._id)}
+                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"
+                >
+                  Supprimer
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -65,7 +99,7 @@ const UserInfos = () => {
         userId={selectedUserId}
         isOpen={!!selectedUserId}
         onClose={closeModal}
-        onSuccess={refetch} // 👈 re-fetch la liste après modif
+        onSuccess={refetch}
       />
     </div>
   );
