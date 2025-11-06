@@ -17,6 +17,7 @@ const BottomNav = () => {
       to: "/login",
       icon: <KeyRound size={22} strokeWidth={0.75} />,
       label: "Connexion",
+    },
     {
       to: "/register",
       icon: <KeyRound size={22} strokeWidth={0.75} />,
