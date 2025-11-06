@@ -1,8 +1,6 @@
 // frontend/src/hooks/useApiMutation.ts
-
 import { useState } from "react";
 import axiosClient from "../api/axiosClient";
-import axios from "axios";
 
 type HttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -20,13 +18,13 @@ export function useApiMutation<TResponse = unknown, TBody = unknown>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mutate = async (body?: TBody) => {
+  const mutate = async (body?: TBody, customConfig: any = {}) => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await axiosClient.request<TResponse>({
-        url: endpoint,
+        url: customConfig.url ?? endpoint, // ✅ permet override dynamique
         method,
         data: body,
       });
@@ -35,16 +33,10 @@ export function useApiMutation<TResponse = unknown, TBody = unknown>(
       options.onSuccess?.(response.data);
       return response.data;
 
-    } catch (err: unknown) {
-      console.error("❌ API Mutation Error:", err);
+    } catch (err: any) {
+      console.error("API Mutation Error:", err);
 
-      let message = "Erreur inconnue";
-
-      // ✅ SI c'est une erreur Axios → on récupère le vrai message du serveur
-      if (axios.isAxiosError(err)) {
-        message = err.response?.data?.error || err.message || message;
-      }
-
+      const message = err.response?.data?.error || err.message || "Erreur inconnue";
       setError(message);
       options.onError?.(err);
       throw err;
