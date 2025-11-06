@@ -5,14 +5,18 @@ import { Home, User, ScanQrCode, KeyRound } from "lucide-react";
 const BottomNav = () => {
   const navItemsLeft = [
     { to: "/", icon: <Home size={22} strokeWidth={0.75} />, label: "Accueil" },
-  ];
-
-  const navItemsRight = [
     {
       to: "/profile",
       icon: <User size={22} strokeWidth={0.75} />,
       label: "Profil",
-    },
+    }
+  ];
+
+  const navItemsRight = [
+    {
+      to: "/login",
+      icon: <KeyRound size={22} strokeWidth={0.75} />,
+      label: "Connexion"
     {
       to: "/register",
       icon: <KeyRound size={22} strokeWidth={0.75} />,
