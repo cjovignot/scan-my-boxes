@@ -1,4 +1,4 @@
-// frontend/src/hooks/useMutation.ts
+// frontend/src/hooks/useApiMutation.ts
 
 import { useState } from "react";
 import axiosClient from "../api/axiosClient";
