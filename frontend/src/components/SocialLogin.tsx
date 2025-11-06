@@ -1,6 +1,4 @@
 // frontend/components/SocialLogin.tsx
-"use client";
-
 import { useEffect } from "react";
 import GoogleOneTap from "google-one-tap";
 import AppleLogin from "react-apple-login";
@@ -12,7 +10,7 @@ type SocialLoginProps = {
 export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
   // --- GOOGLE ONE TAP ---
   useEffect(() => {
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!googleClientId) return;
 
     const googleOneTap = new GoogleOneTap({
@@ -42,8 +40,8 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
     <div className="flex flex-col gap-3 mt-4">
       {/* Apple Sign In */}
       <AppleLogin
-        clientId={process.env.NEXT_PUBLIC_APPLE_CLIENT_ID!}
-        redirectURI={process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI!}
+        clientId={import.meta.env.VITE_APPLE_CLIENT_ID}
+        redirectURI={import.meta.env.VITE_APPLE_REDIRECT_URI}
         responseType="code"
         responseMode="query"
         usePopup={true}
