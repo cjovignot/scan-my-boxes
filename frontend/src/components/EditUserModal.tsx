@@ -37,7 +37,7 @@ export const EditUserModal = ({ userId, isOpen, onClose, onSuccess }: EditUserMo
     _id: string;
     name: string;
     email: string;
-  }>(userId ? `/api/users/${userId}` : "", { skip: !userId });
+  }>(userId ? `/api/user/${userId}` : "", { skip: !userId });
 
   useEffect(() => {
     if (user) {
