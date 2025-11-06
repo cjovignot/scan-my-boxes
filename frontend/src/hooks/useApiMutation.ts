@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import axiosClient from "../api/axiosClient";
+import axios from "axios";
 
 type HttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -10,12 +11,6 @@ interface MutationOptions<TData = unknown> {
   onError?: (error: unknown) => void;
 }
 
-/**
- * Hook générique pour exécuter une requête API manuelle (POST, PUT, DELETE…)
- * @example
- * const { mutate, loading, error, data } = useApiMutation("/api/items", "POST");
- * mutate({ name: "Box" });
- */
 export function useApiMutation<TResponse = unknown, TBody = unknown>(
   endpoint: string,
   method: HttpMethod,
@@ -35,18 +30,25 @@ export function useApiMutation<TResponse = unknown, TBody = unknown>(
         method,
         data: body,
       });
+
       setData(response.data);
       options.onSuccess?.(response.data);
       return response.data;
-    } catch (err) {
-      console.error("API Mutation Error:", err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Erreur inconnue lors de la requête";
+
+    } catch (err: unknown) {
+      console.error("❌ API Mutation Error:", err);
+
+      let message = "Erreur inconnue";
+
+      // ✅ SI c'est une erreur Axios → on récupère le vrai message du serveur
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.error || err.message || message;
+      }
+
       setError(message);
       options.onError?.(err);
       throw err;
+
     } finally {
       setLoading(false);
     }
