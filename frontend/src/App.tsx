@@ -9,9 +9,38 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./contexts/AuthProvider";
+import { useEffect } from "react";
 
 function App() {
   const location = useLocation();
+
+  // ✅ (1) Enregistrement manuel du service worker (utile si tu veux plus de contrôle)
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) =>
+            console.log("🟢 Service Worker enregistré :", reg.scope)
+          )
+          .catch((err) => console.error("🔴 Erreur Service Worker :", err));
+      });
+    }
+  }, []);
+
+  // ✅ (2) Détection du mode PWA (standalone)
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone; // support iOS
+
+    if (isStandalone) {
+      console.log("📱 App lancée en mode PWA standalone");
+      // Optionnel : tu pourrais stocker ça dans ton contexte Auth ou analytics
+    } else {
+      console.log("🌐 App lancée dans le navigateur classique");
+    }
+  }, []);
 
   return (
     <AuthProvider>
