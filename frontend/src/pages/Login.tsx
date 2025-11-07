@@ -6,29 +6,30 @@ import { useApiMutation } from "../hooks/useApiMutation";
 const Login = () => {
   const navigate = useNavigate();
 
-  // ✅ Mutation Google Login
+  // ✅ Mutation pour Google Login
   const { mutate: loginWithGoogle } = useApiMutation<
-    { user: any }, // réponse attendue
-    { provider: string; token: string; profile: any } // payload envoyé
+    { user: any },              // réponse attendue
+    { token: string }           // payload envoyé
   >("/api/auth/google-login", "POST", {
     onSuccess: (data) => {
       if (!data?.user) {
         alert("Utilisateur non trouvé dans la réponse du serveur.");
         return;
       }
-      // ✅ Sauvegarde utilisateur
+      // Sauvegarde utilisateur
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/home");
+      navigate("/home"); // navigation SPA
     },
     onError: (error) => {
       console.error("❌ Erreur Google Login:", error);
-      alert("Erreur de connexion via Google:", error);
+      alert("Erreur de connexion Google");
     },
   });
 
-  const handleLogin = ({ token }: { token: string }) => {
-  loginWithGoogle({ token });
-};
+  // Appel depuis le composant SocialLogin
+  const handleGoogleLogin = ({ token }: { token: string }) => {
+    loginWithGoogle({ token });
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-6 text-white bg-gray-950">
@@ -37,7 +38,7 @@ const Login = () => {
       <UserForm />
 
       <div className="mt-6">
-        <SocialLogin onLogin={handleLogin} />
+        <SocialLogin onLogin={handleGoogleLogin} />
       </div>
     </div>
   );
