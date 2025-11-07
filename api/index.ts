@@ -3,6 +3,7 @@ import cors from "cors";
 import serverless from "serverless-http";
 import exampleRouter from "./routes/example";
 import userRouter from "./routes/user";
+import authRouter from "./routes/auth";
 import { connectDB } from "./utils/db";
 import dotenv from "dotenv";
 import path from "path";
@@ -51,6 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ Routes
 app.use("/api/example", exampleRouter);
 app.use("/api/user", userRouter);
+app.use("/api/auth", authRouter);
 
 // ✅ Database
 connectDB();
