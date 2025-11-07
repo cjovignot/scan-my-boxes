@@ -1,21 +1,13 @@
 import express from "express";
 import cors from "cors";
-import serverless from "serverless-http";
 import exampleRouter from "./routes/example";
 import userRouter from "./routes/user";
 import authRouter from "./routes/auth";
-import { connectDB } from "./utils/db";
 import dotenv from "dotenv";
-import path from "path";
 
-// ============================
-// 🔹 Configuration .env
-// ============================
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// 🔹 Charge les variables d'environnement (Vercel les injecte automatiquement)
+dotenv.config();
 
-// ============================
-// 🚀 Initialisation express
-// ============================
 const app = express();
 
 // ============================
@@ -40,9 +32,7 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
   next();
 });
 
@@ -51,13 +41,6 @@ app.use((req, res, next) => {
 // ============================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ============================
-// 🗄️ Connexion à la base de données
-// ============================
-connectDB()
-  .then(() => console.log("✅ MongoDB connecté"))
-  .catch((err) => console.error("❌ Erreur MongoDB :", err));
 
 // ============================
 // 📦 Routes
@@ -91,8 +74,5 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// ============================
-// ☁️ Export pour Vercel (serverless)
-// ============================
-export const handler = serverless(app);
+// ✅ Export pour Vercel
 export default app;
