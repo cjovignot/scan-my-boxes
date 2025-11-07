@@ -3,7 +3,6 @@ import { OAuth2Client } from "google-auth-library";
 import connectDB from "../../utils/db";
 import { User } from "../../models/User";
 
-// Le client Google côté serveur utilise GOOGLE_CLIENT_ID (non exposé au front)
 const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -16,7 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!token) return res.status(400).json({ message: "Token manquant" });
 
   try {
-    // Vérification du token Google
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.VITE_GOOGLE_CLIENT_ID,
@@ -27,14 +25,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { email, name, picture } = payload;
 
-    // Vérifier si l'utilisateur existe déjà
     let user = await User.findOne({ email });
     if (!user) {
-      user = await User.create({
-        name,
-        email,
-        avatar: picture,
-      });
+      user = await User.create({ name, email, avatar: picture });
     }
 
     return res.status(200).json({ user });
