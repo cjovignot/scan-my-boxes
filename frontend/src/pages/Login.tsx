@@ -10,7 +10,7 @@ const Login = () => {
   const { mutate: loginWithGoogle } = useApiMutation<
     { user: any }, // réponse attendue
     { provider: string; token: string; profile: any } // payload envoyé
-  >("/api/user/google-login", "POST", {
+  >("/api/auth/google-login", "POST", {
     onSuccess: (data) => {
       if (!data?.user) {
         alert("Utilisateur non trouvé dans la réponse du serveur.");
