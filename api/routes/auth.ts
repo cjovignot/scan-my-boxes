@@ -14,11 +14,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!token) return res.status(400).json({ message: "Token manquant" });
 
   try {
-    const ticket = await client.verifyIdToken({ idToken: token, audience: process.env.VITE_GOOGLE_CLIENT_ID });
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.VITE_GOOGLE_CLIENT_ID,
+    });
+
     const payload = ticket.getPayload();
     if (!payload) return res.status(400).json({ message: "Token invalide" });
 
     const { email, name, picture } = payload;
+
     let user = await User.findOne({ email });
     if (!user) user = await User.create({ name, email, avatar: picture });
 
