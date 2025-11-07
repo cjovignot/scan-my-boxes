@@ -26,9 +26,9 @@ const Login = () => {
     },
   });
 
-  const handleLogin = ({ provider, token, profile }: any) => {
-    loginWithGoogle({ provider, token, profile });
-  };
+  const handleLogin = ({ token }: { token: string }) => {
+  loginWithGoogle({ token });
+};
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-6 text-white bg-gray-950">
