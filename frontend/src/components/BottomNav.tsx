@@ -1,31 +1,45 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, User, ScanQrCode, KeyRound } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const BottomNav = () => {
-  const navItemsLeft = [
-    { to: "/", icon: <Home size={22} strokeWidth={0.75} />, label: "Accueil" },
-    {
-      to: "/profile",
-      icon: <User size={22} strokeWidth={0.75} />,
-      label: "Profil",
-    }
-  ];
+  const [user, setUser] = useState<any>(null);
 
-  const navItemsRight = [
-    {
-      to: "/login",
-      icon: <KeyRound size={22} strokeWidth={0.75} />,
-      label: "Connexion",
-    },
-    {
-      to: "/register",
-      icon: <KeyRound size={22} strokeWidth={0.75} />,
-      label: "Inscription",
-    },
-  ];
+  // 🔍 Vérifie si un utilisateur est stocké dans localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
 
   const handleFabClick = () => alert("🚀 Action rapide !");
+
+  const navItemsLeft = [
+    { to: "/", icon: <Home size={22} strokeWidth={0.75} />, label: "Accueil" },
+  ];
+
+  // 🔁 Si user connecté → afficher profil, sinon login + register
+  const navItemsRight = user
+    ? [
+        {
+          to: "/profile",
+          icon: (
+            <div className="relative">
+              <User size={22} strokeWidth={0.75} />
+              {/* 🟢 Pastille verte */}
+              <span className="absolute top-0 right-0 block w-2 h-2 bg-green-500 rounded-full ring-2 ring-gray-900"></span>
+            </div>
+          ),
+          label: "Profil",
+        },
+      ]
+    : [
+        {
+          to: "/login",
+          icon: <KeyRound size={22} strokeWidth={0.75} />,
+          label: "Connexion",
+        },
+      ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-800 shadow-lg md:hidden">
@@ -55,7 +69,7 @@ const BottomNav = () => {
           ))}
         </div>
 
-        {/* FAB (centré au-dessus de la nav) */}
+        {/* FAB central */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           animate={{ scale: 1 }}
