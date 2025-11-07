@@ -5,7 +5,7 @@ const isProd = import.meta.env.PROD;
 
 const axiosClient = axios.create({
   baseURL: isProd
-    ? `${window.location.origin}/api` // ✅ prod => https://tonsite.vercel.app/api
+    ? `${window.location.origin}` // ✅ prod => https://tonsite.vercel.app/api
     : "http://localhost:3001/api", // ✅ dev
   timeout: 10000,
   headers: {
