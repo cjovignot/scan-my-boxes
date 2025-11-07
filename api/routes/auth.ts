@@ -1,3 +1,11 @@
+import { Router } from "express";
+import { User } from "../models/User";
+import { connectDB } from "../utils/db";
+import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
+import dotenv from "dotenv";
+import path from "path";
+
 // ✅ POST /api/user/google-login
 router.post("/google-login", async (req, res) => {
   await connectDB();
