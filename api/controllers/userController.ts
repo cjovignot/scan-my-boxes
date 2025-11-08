@@ -25,7 +25,7 @@ export async function createUser(data: {
   const user = await User.create({
     name: data.name || "Utilisateur",
     email: data.email,
-    password: data.password ? await bcrypt.hash(data.password, 10) : "-",
+    password: data.password || "-", // ❌ ne pas rehash ici
     picture: data.picture || "",
     provider: data.provider || "local",
     role: data.role || "user",

@@ -195,20 +195,17 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // 🔍 Recherche de l'utilisateur
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ error: "Utilisateur introuvable." });
     }
 
-    // ⚙️ Vérifie que ce n’est pas un compte Google
     if (user.provider === "google") {
       return res.status(400).json({
         error: "Ce compte est associé à Google. Utilisez la connexion Google.",
       });
     }
 
-    // 🧩 Vérifie le mot de passe
     const bcrypt = await import("bcryptjs");
     if (!user.password) {
       return res.status(400).json({
@@ -217,32 +214,26 @@ router.post("/login", async (req, res) => {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Mot de passe incorrect." });
-    }
 
-    // 🔐 Génère le token JWT
     const jwt = await import("jsonwebtoken");
     const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
 
-    // 🔁 Redirige vers /auth/success sur le frontend (même logique que Google)
-    const frontendUrl =
-      process.env.FRONTEND_URL || "https://scan-my-boxes.vercel.app";
-
-    const redirectUrl = `${frontendUrl}/auth/success?email=${encodeURIComponent(
-      email
-    )}&token=${token}`;
-
-    console.log("✅ Redirection vers :", redirectUrl);
-    return res.redirect(redirectUrl);
+    // ✅ Réponse JSON au lieu d'une redirection
+    res.status(200).json({
+      message: "Connexion réussie",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        provider: user.provider,
+      },
+    });
   } catch (error: any) {
     console.error("❌ Erreur login :", error);
     res.status(500).json({

@@ -43,7 +43,6 @@ const UserForm = () => {
     typeof formData
   >("/api/user", "POST", {
     onSuccess: () => {
-      alert("✅ Compte créé avec succès !");
       setFormData({ name: "", email: "", password: "" });
     },
     onError: (err) => console.error("Erreur création utilisateur :", err),
