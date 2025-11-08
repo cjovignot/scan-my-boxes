@@ -37,15 +37,15 @@ const UserInfos = () => {
   );
 
   const handleDelete = async (id: string) => {
-  const ok = confirm("⚠️ Es-tu sûr de vouloir supprimer cet utilisateur ?");
-  if (!ok) return;
+    const ok = confirm("⚠️ Es-tu sûr de vouloir supprimer cet utilisateur ?");
+    if (!ok) return;
 
-  await deleteUser(undefined, {
-    url: `/api/user/${id}`, // ✅ maintenant ça fonctionne
-  });
+    await deleteUser(undefined, {
+      url: `/api/user/${id}`, // ✅ maintenant ça fonctionne
+    });
 
-  refetch(); // 🔄 rafraîchir la liste après suppression
-};
+    refetch(); // 🔄 rafraîchir la liste après suppression
+  };
 
   return (
     <div className="w-full max-w-md p-6 bg-gray-900 border border-gray-800 shadow-lg rounded-2xl">
@@ -63,7 +63,10 @@ const UserInfos = () => {
       {data && data.length > 0 && (
         <ul className="divide-y divide-gray-800">
           {data.map((user) => (
-            <li key={user._id} className="py-3 flex justify-between items-center">
+            <li
+              key={user._id}
+              className="flex items-center justify-between py-3"
+            >
               <div>
                 <p className="font-medium text-yellow-400">{user.name}</p>
                 <p className="text-sm text-gray-400">{user.email}</p>
@@ -78,7 +81,7 @@ const UserInfos = () => {
                 {/* Bouton Modifier */}
                 <button
                   onClick={() => handleEdit(user._id)}
-                  className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-400"
+                  className="px-3 py-1 text-sm text-black bg-yellow-500 rounded hover:bg-yellow-400"
                 >
                   Modifier
                 </button>
@@ -86,7 +89,7 @@ const UserInfos = () => {
                 {/* 🗑️ Bouton Supprimer */}
                 <button
                   onClick={() => handleDelete(user._id)}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"
+                  className="px-3 py-1 text-sm text-white bg-red-600 rounded hover:bg-red-500"
                 >
                   Supprimer
                 </button>
