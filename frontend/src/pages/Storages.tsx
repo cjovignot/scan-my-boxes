@@ -47,12 +47,9 @@ const Storages = () => {
           ? a.name.localeCompare(b.name)
           : b.name.localeCompare(a.name);
       }
-      if (sortMode === "boxCount") {
-        return ascending
-          ? a.boxes.length - b.boxes.length
-          : b.boxes.length - a.boxes.length;
-      }
-      return 0;
+      return ascending
+        ? a.boxes.length - b.boxes.length
+        : b.boxes.length - a.boxes.length;
     });
 
   return (
@@ -63,7 +60,6 @@ const Storages = () => {
           Entrepôts
         </h1>
 
-        {/* Barre de recherche */}
         <input
           type="text"
           placeholder="Rechercher par nom..."
@@ -72,19 +68,18 @@ const Storages = () => {
           className="w-full px-4 py-2 mb-4 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-400"
         />
 
-        {/* Tri + ordre */}
         <div className="flex items-center justify-between mb-6">
-          {/* Sélecteur de mode tri */}
+
+          {/* Sélecteur de tri avec le même style que le toggle */}
           <select
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value as "name" | "boxCount")}
-            className="flex items-center gap-1 px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700"
+            className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:outline-none hover:bg-gray-700"
           >
-            <option value="name">Nom (A → Z)</option>
+            <option value="name">Nom alphabétique</option>
             <option value="boxCount">Nombre de boîtes</option>
           </select>
 
-          {/* Toggle d'ordre */}
           <button
             onClick={() => setAscending(!ascending)}
             className="flex items-center gap-1 px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700"
@@ -94,13 +89,11 @@ const Storages = () => {
           </button>
         </div>
 
-        {/* Bouton Ajouter */}
         <button className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-6 text-sm font-medium text-black bg-yellow-400 rounded-lg">
           <Plus size={18} />
           Ajouter un entrepôt
         </button>
 
-        {/* Liste */}
         <div className="flex flex-col w-full gap-4">
           {filtered.map((storage) => (
             <div
