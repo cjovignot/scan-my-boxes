@@ -1,22 +1,21 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, User, ScanQrCode, KeyRound, Shield } from "lucide-react"; // 🛡️ Icone admin
+import { Home, User, ScanQrCode, KeyRound, Shield, Boxes } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 const BottomNav = () => {
-  const { user } = useAuth(); // ✅ Récupère l'utilisateur connecté
+  const { user } = useAuth();
 
   const handleFabClick = () => alert("🚀 Action rapide !");
 
   const navItemsLeft = [
     { to: "/", icon: <Home size={22} strokeWidth={0.75} />, label: "Accueil" },
+    { to: "/storages", icon: <Boxes size={22} strokeWidth={0.75} />, label: "Entrepôts" },
   ];
 
-  // 🔹 Nav items dynamiques selon le rôle du user
   let navItemsRight = [];
 
   if (!user) {
-    // 🧑‍💻 Non connecté
     navItemsRight = [
       {
         to: "/login",
@@ -25,7 +24,6 @@ const BottomNav = () => {
       },
     ];
   } else if (user.role === "admin") {
-    // 👑 Admin
     navItemsRight = [
       {
         to: "/admin",
@@ -37,7 +35,6 @@ const BottomNav = () => {
         icon: (
           <div className="relative">
             <User size={22} strokeWidth={0.75} />
-            {/* 🟢 Pastille verte */}
             <span className="absolute top-0 right-0 block w-2 h-2 bg-green-500 rounded-full ring-2 ring-gray-900"></span>
           </div>
         ),
@@ -45,14 +42,12 @@ const BottomNav = () => {
       },
     ];
   } else {
-    // 👤 Utilisateur standard
     navItemsRight = [
       {
         to: "/profile",
         icon: (
           <div className="relative">
             <User size={22} strokeWidth={0.75} />
-            {/* 🟢 Pastille verte */}
             <span className="absolute top-0 right-0 block w-2 h-2 bg-green-500 rounded-full ring-2 ring-gray-900"></span>
           </div>
         ),
@@ -64,6 +59,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-800 shadow-lg md:hidden">
       <div className="relative flex items-center justify-between py-3">
+
         {/* Bloc gauche */}
         <div className="flex flex-1 justify-evenly">
           {navItemsLeft.map((item) => (
@@ -116,6 +112,7 @@ const BottomNav = () => {
             </NavLink>
           ))}
         </div>
+
       </div>
     </nav>
   );
