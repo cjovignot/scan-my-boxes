@@ -1,3 +1,4 @@
+import { useState } from "react";
 import UserForm from "../components/UserForm";
 import { SocialLogin } from "../components/SocialLogin";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 const Login = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const [showUserForm, setShowUserForm] = useState(false);
 
   const { mutate: loginWithGoogle } = useApiMutation<
     { user: any },
@@ -29,13 +31,26 @@ const Login = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen px-6 py-10 text-white bg-gray-950">
-      <h1 className="mb-6 text-4xl font-bold text-center text-yellow-400">
+      <h1 className="mb-6 mb-10 text-4xl font-bold text-center text-yellow-400">
         Connexion
       </h1>
 
-      <div className="mt-2">
-        <SocialLogin onLogin={handleGoogleLogin} />
-      </div>
+      {/* 🔹 Bouton pour afficher/masquer UserForm */}
+      <button
+        onClick={() => setShowUserForm((prev) => !prev)}
+        className="px-6 py-2 mb-4 text-sm font-medium text-yellow-500 transition-all bg-gray-900 rounded-full shadow hover:scale-105 active:scale-95"
+      >
+        {showUserForm
+          ? "Masquer le formulaire"
+          : "Connexion / inscription par email"}
+      </button>
+
+      {/* 🔹 Formulaire utilisateur */}
+      {showUserForm && (
+        <div className="w-full max-w-sm mt-4 animate-fadeIn">
+          <UserForm />
+        </div>
+      )}
 
       {/* 🔸 Séparateur stylé */}
       <div className="relative w-full max-w-sm my-8">
@@ -47,7 +62,10 @@ const Login = () => {
         </div>
       </div>
 
-      <UserForm />
+      {/* 🔹 Connexion Google */}
+      <div className="mt-2">
+        <SocialLogin onLogin={handleGoogleLogin} />
+      </div>
     </div>
   );
 };

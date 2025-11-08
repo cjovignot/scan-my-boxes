@@ -6,33 +6,33 @@ type SocialLoginProps = {
 
 export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
   const [isPWA, setIsPWA] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
+  // const [logs, setLogs] = useState<string[]>([]);
 
-  const log = (msg: string) => setLogs((prev) => [...prev, msg]);
+  // const log = (msg: string) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone; // pour iOS
+      (window.navigator as any).standalone; // iOS
 
     setIsPWA(isStandalone);
 
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const API_URL = import.meta.env.VITE_API_URL;
+    // const API_URL = import.meta.env.VITE_API_URL;
 
-    const redirectUrl = `${API_URL}/api/auth/google-redirect?source=pwa`;
+    // const redirectUrl = `${API_URL}/api/auth/google-redirect?source=pwa`;
 
-    log(`🔹 GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}`);
-    log(`🔹 API_URL: ${API_URL}`);
-    log(`🔹 Mode PWA: ${isStandalone}`);
-    log(`🔹 URL de redirection: ${redirectUrl}`);
+    // log(`🔹 GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}`);
+    // log(`🔹 API_URL: ${API_URL}`);
+    // log(`🔹 Mode PWA: ${isStandalone}`);
+    // log(`🔹 URL de redirection: ${redirectUrl}`);
 
-    if (isStandalone) {
-      log("🟡 PWA détectée → bouton personnalisé affiché");
-      return;
-    }
+    // if (isStandalone) {
+    //   log("🟡 PWA détectée → bouton personnalisé affiché");
+    //   return;
+    // }
 
     const handleCredentialResponse = (response: any) => {
       if (response?.credential) {
@@ -61,7 +61,7 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
       }
     );
 
-    log("🟢 Bouton Google rendu.");
+    // log("🟢 Bouton Google rendu.");
   }, [onLogin]);
 
   // 🧱 Bouton custom pour PWA
@@ -81,23 +81,25 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
       ) : (
         <button
           onClick={handlePwaLogin}
-          className="flex items-center justify-center px-6 py-3 text-black transition-transform bg-white rounded-full shadow hover:scale-105"
+          className="flex items-center w-[250px] h-[50px] px-1 py-3 transition-all duration-200 bg-[#131314] rounded-full shadow hover:shadow-lg hover:scale-105 active:scale-95"
         >
           <img
             src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
             alt="Google"
-            className="w-5 h-5 mr-2"
+            className="w-10 p-2 mr-3 bg-white rounded-full"
           />
-          Connexion Google (PWA)
+          <span className="flex justify-center w-full text-sm font-medium text-white">
+            Sign in with Google
+          </span>
         </button>
       )}
 
-      {/* 🔍 Affiche les logs directement dans le composant */}
-      <div className="w-full max-w-sm p-2 mt-4 text-xs text-gray-400 bg-gray-900 rounded-lg">
+      {/* 🔍 Logs debug */}
+      {/* <div className="w-full max-w-sm p-2 mt-4 text-xs text-gray-400 bg-gray-900 rounded-lg">
         {logs.map((line, i) => (
           <div key={i}>{line}</div>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };
