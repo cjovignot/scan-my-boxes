@@ -25,7 +25,7 @@ const mockBoxes: Box[] = [
     storageId: "storageA",
     number: "001",
     content: ["T-shirt", "Chaussures", "Livre"],
-    destination: "Paris",
+    destination: "Chambre",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box1",
     dimensions: { width: 40, height: 30, depth: 20 },
   },
@@ -34,8 +34,8 @@ const mockBoxes: Box[] = [
     ownerId: "user123",
     storageId: "storageB",
     number: "002",
-    content: ["Vase", "Couverture"],
-    destination: "Lyon",
+    content: ["Vase", "Plaid"],
+    destination: "Salon",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box2",
     dimensions: { width: 50, height: 25, depth: 25 },
   },
@@ -45,7 +45,7 @@ const mockBoxes: Box[] = [
     storageId: "storageC",
     number: "003",
     content: ["Chaise", "Tablette", "Lampe"],
-    destination: "Bordeaux",
+    destination: "Salon",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box3",
     dimensions: { width: 60, height: 40, depth: 30 },
   },
@@ -141,7 +141,7 @@ const Home = () => {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-yellow-300">
-                  Boîte #{box.number} - {box.destination}
+                  #{box.number}
                 </h2>
 
                 <div className="flex items-center gap-3">
@@ -153,6 +153,11 @@ const Home = () => {
                   </button>
                 </div>
               </div>
+
+             <p className="mt-2 text-sm text-gray-300">
+                <span className="font-medium text-yellow-400">Destination:</span>{" "}
+                {box.destination}
+              </p>
 
               <p className="mt-2 text-sm text-gray-300">
                 <span className="font-medium text-yellow-400">Stockage:</span>{" "}
@@ -169,14 +174,6 @@ const Home = () => {
                 <span className="font-medium text-yellow-400">Objets:</span>{" "}
                 {box.content.length}
               </p>
-
-              <div className="mt-2">
-                <img
-                  src={box.qrcodeURL}
-                  alt={`QR Code for box ${box.number}`}
-                  className="w-24 h-24"
-                />
-              </div>
             </div>
           ))}
 
