@@ -30,9 +30,6 @@ const Login = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen px-6 py-10 text-white bg-gray-950">
-      <h1 className="mb-6 mb-10 text-4xl font-bold text-center text-yellow-400">
-        Connexion
-      </h1>
 
       {/* 🔹 Formulaire utilisateur */}
         <div className="w-full max-w-sm mt-4 animate-fadeIn">
