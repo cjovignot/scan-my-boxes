@@ -1,8 +1,9 @@
+import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Plus } from "lucide-react";
 
 type Storage = {
-  _id: string; // ✅ ID fourni par MongoDB
+  _id: string;
   name: string;
   address: string;
   boxes: { id: string; label: string }[];
@@ -10,7 +11,8 @@ type Storage = {
 };
 
 const Storages = () => {
-  // ✅ Simulation de données avec _id Mongo-like
+  const [search, setSearch] = useState("");
+
   const storageData: Storage[] = [
     {
       _id: "6743bdc7f1a3c2a91e15d9aa",
@@ -35,6 +37,10 @@ const Storages = () => {
     },
   ];
 
+  const filteredData = storageData.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <PageWrapper>
       <div className="flex flex-col px-6 py-10 text-white">
@@ -43,10 +49,27 @@ const Storages = () => {
           Entrepôts
         </h1>
 
+        {/* Barre de recherche */}
+        <input
+          type="text"
+          placeholder="Rechercher par nom..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-4 py-2 mb-4 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-400"
+        />
+
+        {/* Bouton Ajouter */}
+        <button
+          className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-6 text-sm font-medium text-black bg-yellow-400 rounded-lg"
+        >
+          <Plus size={18} /> Ajouter un entrepôt
+        </button>
+
+        {/* Liste filtrée */}
         <div className="flex flex-col w-full gap-4">
-          {storageData.map((storage) => (
+          {filteredData.map((storage) => (
             <div
-              key={storage._id} // ✅ Utilisation du _id Mongo
+              key={storage._id}
               className="flex flex-col p-4 bg-gray-800 rounded-xl border border-gray-700"
             >
               <div className="flex items-center justify-between">
