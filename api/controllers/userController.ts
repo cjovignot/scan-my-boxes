@@ -56,7 +56,6 @@ export async function updateUserById(
     {
       $set: {
         ...updates,
-        role: user.role, // 🔐 ne jamais écraser le rôle existant
       },
     }
   );
