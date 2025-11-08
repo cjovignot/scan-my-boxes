@@ -60,12 +60,17 @@ const Storages = () => {
           Entrepôts
         </h1>
 
+        <button className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-6 text-sm font-medium text-black bg-yellow-400 rounded-lg">
+          <Plus size={18} />
+          Ajouter un entrepôt
+        </button>
+
         <input
           type="text"
           placeholder="Rechercher par nom..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 mb-4 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-400"
+          className="w-full px-4 py-4 mb-4 text-md text-white bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-400"
         />
 
         <div className="flex items-center justify-between mb-6">
@@ -88,11 +93,6 @@ const Storages = () => {
             {ascending ? "Croissant" : "Décroissant"}
           </button>
         </div>
-
-        <button className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-6 text-sm font-medium text-black bg-yellow-400 rounded-lg">
-          <Plus size={18} />
-          Ajouter un entrepôt
-        </button>
 
         <div className="flex flex-col w-full gap-4">
           {filtered.map((storage) => (
