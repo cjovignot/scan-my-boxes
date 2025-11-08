@@ -2,7 +2,7 @@ import PageWrapper from "../components/PageWrapper";
 import { Pencil, Trash } from "lucide-react";
 
 type Storage = {
-  id: string;
+  _id: string; // ✅ ID fourni par MongoDB
   name: string;
   address: string;
   boxes: { id: string; label: string }[];
@@ -10,24 +10,24 @@ type Storage = {
 };
 
 const Storages = () => {
-  // ✅ Simulation de données (en attendant la connexion au backend)
+  // ✅ Simulation de données avec _id Mongo-like
   const storageData: Storage[] = [
     {
-      id: "1",
+      _id: "6743bdc7f1a3c2a91e15d9aa",
       name: "Garage Maison",
       address: "12 Rue des Peupliers, Rennes",
       boxes: [{ id: "A1", label: "Vêtements" }, { id: "A2", label: "Livres" }],
       ownerId: "user123",
     },
     {
-      id: "2",
+      _id: "6743bdc7f1a3c2a91e15d9ab",
       name: "Cave Immeuble",
       address: "8 Avenue du Général, Nantes",
       boxes: [{ id: "B1", label: "Décos Noël" }],
       ownerId: "user123",
     },
     {
-      id: "3",
+      _id: "6743bdc7f1a3c2a91e15d9ac",
       name: "Box de stockage",
       address: "Parc Logistique, Saint-Malo",
       boxes: [],
@@ -43,11 +43,10 @@ const Storages = () => {
           Entrepôts
         </h1>
 
-        {/* List */}
         <div className="flex flex-col w-full gap-4">
           {storageData.map((storage) => (
             <div
-              key={storage.id}
+              key={storage._id} // ✅ Utilisation du _id Mongo
               className="flex flex-col p-4 bg-gray-800 rounded-xl border border-gray-700"
             >
               <div className="flex items-center justify-between">
