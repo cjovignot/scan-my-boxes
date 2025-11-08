@@ -6,6 +6,7 @@ type Box = {
   _id: string;
   ownerId: string;
   storageId: string;
+  number: string; // numéro unique
   content: string[];
   destination: string;
   qrcodeURL: string;
@@ -22,8 +23,9 @@ const mockBoxes: Box[] = [
     _id: "box1",
     ownerId: "user123",
     storageId: "storageA",
+    number: "001",
     content: ["T-shirt", "Chaussures", "Livre"],
-    destination: "Chambre",
+    destination: "Paris",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box1",
     dimensions: { width: 40, height: 30, depth: 20 },
   },
@@ -31,8 +33,9 @@ const mockBoxes: Box[] = [
     _id: "box2",
     ownerId: "user123",
     storageId: "storageB",
-    content: ["Vase", "Plaid"],
-    destination: "Salon",
+    number: "002",
+    content: ["Vase", "Couverture"],
+    destination: "Lyon",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box2",
     dimensions: { width: 50, height: 25, depth: 25 },
   },
@@ -40,8 +43,9 @@ const mockBoxes: Box[] = [
     _id: "box3",
     ownerId: "user123",
     storageId: "storageC",
+    number: "003",
     content: ["Chaise", "Tablette", "Lampe"],
-    destination: "Salon",
+    destination: "Bordeaux",
     qrcodeURL: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box3",
     dimensions: { width: 60, height: 40, depth: 30 },
   },
@@ -80,17 +84,17 @@ const Home = () => {
         </h1>
 
         {/* Barre de recherche + bouton création */}
-       <div className="flex gap-3">
+        <div className="flex gap-3">
           <input
             type="text"
             placeholder="Rechercher un objet..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 mb-4 text-white bg-gray-800 border border-gray-700 rounded-lg flex-5/6 text-md focus:outline-none focus:ring-1 focus:ring-yellow-400"
+            className="w-full px-4 py-2 mb-4 text-white bg-gray-800 border border-gray-700 rounded-lg text-md focus:outline-none focus:ring-1 focus:ring-yellow-400"
           />
 
-          <button className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-4 text-sm font-medium text-black bg-yellow-400 rounded-lg flex-1/6">
-            <Plus size={18} />
+          <button className="flex items-center justify-center w-full gap-2 px-4 py-2 mb-4 text-sm font-medium text-black bg-yellow-400 rounded-lg">
+            <Plus size={18} /> Nouvelle boîte
           </button>
         </div>
 
@@ -137,7 +141,7 @@ const Home = () => {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-yellow-300">
-                  {box.destination}
+                  Boîte #{box.number} - {box.destination}
                 </h2>
 
                 <div className="flex items-center gap-3">
@@ -150,17 +154,26 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="mt-2 text-sm text-gray-300">
-                <span className="font-medium text-yellow-400">
-                  {box.content.length}
-                </span>{" "}
-                objet(s)
-              </div>
+              <p className="mt-2 text-sm text-gray-300">
+                <span className="font-medium text-yellow-400">Stockage:</span>{" "}
+                {box.storageId}
+              </p>
+
+              <p className="text-sm text-gray-300">
+                <span className="font-medium text-yellow-400">Dimensions:</span>{" "}
+                {box.dimensions.width} x {box.dimensions.height} x{" "}
+                {box.dimensions.depth} cm
+              </p>
+
+              <p className="text-sm text-gray-300">
+                <span className="font-medium text-yellow-400">Objets:</span>{" "}
+                {box.content.length}
+              </p>
 
               <div className="mt-2">
                 <img
                   src={box.qrcodeURL}
-                  alt={`QR Code for box ${box._id}`}
+                  alt={`QR Code for box ${box.number}`}
                   className="w-24 h-24"
                 />
               </div>
