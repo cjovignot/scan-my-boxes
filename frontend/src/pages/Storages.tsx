@@ -78,7 +78,7 @@ const Storages = () => {
           <select
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value as "name" | "boxCount")}
-            className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-400"
+            className="flex items-center gap-1 px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700"
           >
             <option value="name">Nom (A → Z)</option>
             <option value="boxCount">Nombre de boîtes</option>
