@@ -5,22 +5,22 @@ type SocialLoginProps = {
 };
 
 export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
+  const [isPWA, setIsPWA] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
 
-  const log = (message: string) => {
-    console.log(message);
-    setLogs((prev) => [...prev, message]);
-  };
+  const log = (msg: string) => setLogs((prev) => [...prev, msg]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const API_URL = import.meta.env.VITE_API_URL;
-
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone;
+      (window.navigator as any).standalone; // pour iOS
+
+    setIsPWA(isStandalone);
+
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const API_URL = import.meta.env.VITE_API_URL;
 
     const redirectUrl = `${API_URL}/api/auth/google-redirect?source=pwa`;
 
@@ -29,16 +29,11 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
     log(`🔹 Mode PWA: ${isStandalone}`);
     log(`🔹 URL de redirection: ${redirectUrl}`);
 
-    // 🟡 Si on est en PWA, ouverture directe dans un nouvel onglet
     if (isStandalone) {
-      log(
-        "🟡 PWA détectée → ouverture du flux Google OAuth dans le navigateur..."
-      );
-      window.open(redirectUrl, "_blank");
+      log("🟡 PWA détectée → bouton personnalisé affiché");
       return;
     }
 
-    // 🟢 Mode navigateur classique → flux popup Google Identity
     const handleCredentialResponse = (response: any) => {
       if (response?.credential) {
         onLogin({ token: response.credential });
@@ -69,19 +64,38 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
     log("🟢 Bouton Google rendu.");
   }, [onLogin]);
 
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div
-        id="googleSignIn"
-        className="overflow-hidden transition-transform duration-200 rounded-full shadow-md hover:shadow-lg hover:scale-105"
-      ></div>
+  // 🧱 Bouton custom pour PWA
+  const handlePwaLogin = () => {
+    const API_URL = import.meta.env.VITE_API_URL;
+    const redirectUrl = `${API_URL}/api/auth/google-redirect?source=pwa`;
+    window.location.href = redirectUrl;
+  };
 
-      {/* 🔍 Zone de logs visible même sur mobile */}
-      <div className="w-full max-w-xs p-2 mt-4 text-xs text-gray-400 bg-gray-900 rounded-lg">
+  return (
+    <div className="flex flex-col items-center space-y-4">
+      {!isPWA ? (
+        <div
+          id="googleSignIn"
+          className="overflow-hidden transition-transform duration-200 rounded-full shadow-md hover:shadow-lg hover:scale-105"
+        ></div>
+      ) : (
+        <button
+          onClick={handlePwaLogin}
+          className="flex items-center justify-center px-6 py-3 text-black transition-transform bg-white rounded-full shadow hover:scale-105"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            className="w-5 h-5 mr-2"
+          />
+          Connexion Google (PWA)
+        </button>
+      )}
+
+      {/* 🔍 Affiche les logs directement dans le composant */}
+      <div className="w-full max-w-sm p-2 mt-4 text-xs text-gray-400 bg-gray-900 rounded-lg">
         {logs.map((line, i) => (
-          <div key={i} className="whitespace-pre-wrap">
-            {line}
-          </div>
+          <div key={i}>{line}</div>
         ))}
       </div>
     </div>
