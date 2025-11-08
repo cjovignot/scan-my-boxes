@@ -18,8 +18,8 @@ const router = Router();
 
 // ✅ Client Google configuré avec l’ID côté backend
 const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID!;
-const GOOGLE_REDIRECT_URI = process.env.VITE_GOOGLE_REDIRECT_URI!;
-const GOOGLE_CLIENT_SECRET= process.env.GOOGLE_CLIENT_SECRET!;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ============================
@@ -128,18 +128,17 @@ router.get("/google-callback", async (req, res) => {
 
   try {
     // Échange le code contre un token
-   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-  method: "POST",
-  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  body: new URLSearchParams({
-    code,
-    client_id: GOOGLE_CLIENT_ID,
-    client_secret: GOOGLE_CLIENT_SECRET,
-    redirect_uri: GOOGLE_REDIRECT_URI,
-    grant_type: "authorization_code",
-  }),
-});
-
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT_URI,
+        grant_type: "authorization_code",
+      }),
+    });
 
     const tokens = await tokenRes.json();
     if (!tokens.id_token) throw new Error("Pas d'id_token reçu de Google");
