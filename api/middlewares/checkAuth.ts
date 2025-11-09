@@ -1,3 +1,4 @@
+// api/middlewares/checkAuth.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 

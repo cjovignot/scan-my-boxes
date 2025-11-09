@@ -1,3 +1,4 @@
+// api/middlewares/checkAdmin.ts
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "./checkAuth";
 

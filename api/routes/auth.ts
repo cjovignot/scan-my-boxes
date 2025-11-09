@@ -114,7 +114,7 @@ router.get("/google-redirect", (req, res) => {
     scope,
   });
 
-  console.log("🔁 Redirection Google OAuth →", params.toString());
+  // console.log("🔁 Redirection Google OAuth →", params.toString());
   res.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   );
