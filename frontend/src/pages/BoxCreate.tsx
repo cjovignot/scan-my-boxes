@@ -223,7 +223,7 @@ const BoxCreate = () => {
             {contentItems.map((item, index) => (
               <div
                 key={index}
-                className="flex flex-col gap-2 p-3 mt-2 bg-gray-900 border border-gray-700 rounded-lg"
+                className="flex flex-col gap-2 p-3 mt-2 border border-gray-700 rounded-lg bg-gray-950"
               >
                 <div className="flex items-center gap-2">
                   <input

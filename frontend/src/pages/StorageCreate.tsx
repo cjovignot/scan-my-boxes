@@ -53,14 +53,14 @@ const StorageCreate = () => {
           >
             <ArrowLeft size={20} /> Retour
           </button>
-          <h1 className="text-3xl font-bold text-yellow-400">
+          <h1 className="text-xl font-bold text-yellow-400">
             Créer un entrepôt
           </h1>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col max-w-lg gap-4 p-6 mx-auto bg-gray-800 border border-gray-700 rounded-xl"
+          className="flex flex-col max-w-lg gap-2 p-4 mx-auto bg-gray-800 border border-gray-700 rounded-xl"
         >
           <input
             type="text"
@@ -68,7 +68,7 @@ const StorageCreate = () => {
             placeholder="Nom de l'entrepôt"
             value={form.name}
             onChange={handleChange}
-            className="px-3 py-2 bg-gray-900 border border-gray-700 rounded focus:ring-1 focus:ring-yellow-400"
+            className="px-3 py-1 border border-gray-700 rounded-lg bg-gray-950 focus:ring-1 focus:ring-yellow-400"
             required
           />
 
@@ -78,7 +78,7 @@ const StorageCreate = () => {
             placeholder="Adresse"
             value={form.location}
             onChange={handleChange}
-            className="px-3 py-2 bg-gray-900 border border-gray-700 rounded focus:ring-1 focus:ring-yellow-400"
+            className="px-3 py-1 border border-gray-700 rounded-lg bg-gray-950 focus:ring-1 focus:ring-yellow-400"
           />
 
           {error && (

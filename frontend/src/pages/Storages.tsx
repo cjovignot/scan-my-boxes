@@ -155,7 +155,7 @@ const Storages = () => {
                   className="flex flex-col p-4 bg-gray-800 border border-gray-700 rounded-xl"
                 >
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-yellow-300">
+                    <h2 className="text-xl font-semibold text-yellow-400">
                       {storage.name}
                     </h2>
 
