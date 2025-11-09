@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Home,
@@ -13,8 +14,11 @@ import { useAuth } from "../contexts/AuthContext";
 
 const BottomNav = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleFabClick = () => alert("🚀 Action rapide !");
+  const handleFabClick = () => {
+    navigate("/scan");
+  };
 
   const navItemsLeft = [
     {

@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Storages from "./pages/Storages";
 import Boxes from "./pages/Boxes";
+import ScanPage from "./pages/ScanPage";
 import AuthSuccess from "./pages/AuthSuccess";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { useEffect } from "react";
@@ -60,6 +61,7 @@ function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/storages" element={<Storages />} />
             <Route path="/boxes" element={<Boxes />} />
+            <Route path="/scan" element={<ScanPage />} />
             <Route path="/auth/success" element={<AuthSuccess />} />
           </Route>
         </Routes>
