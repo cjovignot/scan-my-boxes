@@ -154,20 +154,20 @@ const Dashboard = () => {
   return (
     <PageWrapper>
       <div className="flex flex-col px-6 py-10 text-white">
-        <h1 className="mb-20 text-4xl font-bold text-center text-yellow-400">
+        <h1 className="mb-10 text-4xl font-bold text-center text-yellow-400">
           📊 Tableau de bord
         </h1>
 
         {/* Section des cartes de stats */}
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {stats.map(({ id, label, value, description, icon: Icon }) => (
             <div
               key={id}
-              className="flex flex-col items-start justify-between p-6 transition-all duration-200 bg-gray-800 border border-gray-700 rounded-2xl hover:bg-gray-700 hover:scale-[1.02]"
+              className="flex flex-col items-start justify-between p-4 transition-all duration-200 bg-gray-800 border border-gray-700 rounded-2xl hover:bg-gray-700 hover:scale-[1.02]"
             >
-              <div className="flex items-center justify-between w-full">
-                <Icon size={20} className="text-yellow-400" />
-                <h2 className="font-semibold text-right text-yellow-400 text-md">
+              <div className="flex flex-col items-start w-full">
+                <Icon size={26} className="text-yellow-400" />
+                <h2 className="mt-2 font-semibold text-right text-yellow-400 text-md">
                   {label}
                 </h2>
               </div>
