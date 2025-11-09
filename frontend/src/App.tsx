@@ -5,6 +5,7 @@ import MobileLayout from "./layouts/MobileLayout";
 import Home from "./pages/Home";
 import Examples from "./pages/Examples";
 import Profile from "./pages/Profile";
+import UserAccount from "./pages/UserAccount";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import AdminUsers from "./pages/Admin/Users";
@@ -59,6 +60,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/examples" element={<Examples />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/useraccount" element={<UserAccount />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin/users" element={<AdminUsers />} />
