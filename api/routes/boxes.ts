@@ -145,14 +145,28 @@ router.put("/:id", async (req, res) => {
 
 /**
  * 🔴 DELETE /api/boxes/:id
- * Supprime une boîte
+ * Supprime une boîte et la retire de l’entrepôt associé
  */
 router.delete("/:id", async (req, res) => {
   try {
-    const deletedBox = await Box.findByIdAndDelete(req.params.id);
-    if (!deletedBox)
+    const box = await Box.findById(req.params.id);
+    if (!box) {
       return res.status(404).json({ error: "Boîte introuvable" });
-    res.json({ message: "Boîte supprimée avec succès" });
+    }
+
+    // 🗑️ Supprime la boîte
+    await Box.findByIdAndDelete(req.params.id);
+
+    // 🔗 Retire la boîte du tableau "boxes" de l’entrepôt associé
+    const updatedStorage = await updateStorageById(box.storageId.toString(), {
+      $pull: { boxes: box._id },
+    });
+
+    if (!updatedStorage) {
+      console.warn("⚠️ Entrepôt introuvable pour suppression de boîte");
+    }
+
+    res.json({ message: "✅ Boîte supprimée et retirée de l’entrepôt" });
   } catch (err) {
     console.error("Erreur suppression boîte :", err);
     res.status(500).json({ error: "Erreur serveur" });

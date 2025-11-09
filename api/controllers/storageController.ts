@@ -54,11 +54,7 @@ export async function findStorageById(id: string) {
 // ====================================
 export async function updateStorageById(
   id: string,
-  updates: Partial<{
-    name: string;
-    address: string;
-    boxes: any[];
-  }>
+  updates: any // 👈 remplacer la ligne existante par celle-ci
 ) {
   await connectDB();
 

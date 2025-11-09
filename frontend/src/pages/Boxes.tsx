@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import { Pencil, Trash, Plus, ArrowUpDown, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useApi } from "../hooks/useApi";
-import { useApiMutation } from "../hooks/useApiMutation";
 
+// =====================================
+// 🔹 Types
+// =====================================
 type ContentItem = {
   name: string;
   quantity: number;
@@ -31,74 +32,109 @@ type Storage = {
   name: string;
 };
 
+// =====================================
+// 🔹 Composant principal
+// =====================================
 const Boxes = () => {
   const navigate = useNavigate();
+  const [boxes, setBoxes] = useState<Box[]>([]);
+  const [storages, setStorages] = useState<Storage[]>([]);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<"destination" | "objectCount">(
     "destination"
   );
   const [ascending, setAscending] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const headerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  // ============================
-  // 🔹 Récupération des boîtes
-  // ============================
-  const { data: boxes, loading, error, refetch } = useApi<Box[]>("/api/boxes");
+  const API_URL = import.meta.env.VITE_API_URL;
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // ============================
-  // 🔹 Récupération des entrepôts
-  // ============================
-  const { data: storages } = useApi<Storage[]>("/api/storages");
+  // =====================================
+  // 🔹 Fetch des boîtes de l’utilisateur
+  // =====================================
+  useEffect(() => {
+    const fetchBoxes = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/boxes?ownerId=${user._id}`);
+        if (!res.ok)
+          throw new Error("Erreur réseau lors du chargement des boîtes");
+        const data = await res.json();
+        setBoxes(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // ============================
-  // 🔹 Mutation : suppression d’une boîte
-  // ============================
-  const { mutate: deleteBox, loading: deleting } = useApiMutation<
-    { success: boolean },
-    void
-  >("/api/boxes", "DELETE", {
-    onSuccess: () => {
-      refetch();
-    },
-    onError: (err) => {
-      console.error("Erreur suppression boîte :", err);
-      alert("❌ Impossible de supprimer la boîte");
-    },
-  });
+    if (user?._id) fetchBoxes();
+  }, [API_URL, user]);
 
+  // =====================================
+  // 🔹 Fetch des entrepôts (pour afficher leur nom)
+  // =====================================
+  useEffect(() => {
+    const fetchStorages = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/storages?ownerId=${user._id}`);
+        if (!res.ok)
+          throw new Error("Erreur réseau lors du chargement des entrepôts");
+        const data = await res.json();
+        setStorages(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (user?._id) fetchStorages();
+  }, [API_URL, user]);
+
+  // =====================================
+  // 🔹 Suppression d’une boîte
+  // =====================================
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette boîte ?")) return;
-    await deleteBox(undefined, { url: `/api/boxes/${id}` });
+
+    try {
+      const res = await fetch(`${API_URL}/api/boxes/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Erreur lors de la suppression");
+      setBoxes((prev) => prev.filter((box) => box._id !== id));
+    } catch (err) {
+      console.error("❌ Erreur suppression boîte :", err);
+      alert("Impossible de supprimer la boîte.");
+    }
   };
 
-  // ============================
+  // =====================================
   // 🔹 Filtrage + tri
-  // ============================
-  const filteredBoxes =
-    boxes
-      ?.filter((box) =>
-        box.content.some((item) =>
-          item.name.toLowerCase().includes(search.toLowerCase())
-        )
+  // =====================================
+  const filteredBoxes = boxes
+    .filter((box) =>
+      box.content.some((item) =>
+        item.name.toLowerCase().includes(search.toLowerCase())
       )
-      .sort((a, b) => {
-        if (sortMode === "destination") {
-          return ascending
-            ? a.destination.localeCompare(b.destination)
-            : b.destination.localeCompare(a.destination);
-        } else {
-          return ascending
-            ? a.content.length - b.content.length
-            : b.content.length - a.content.length;
-        }
-      }) ?? [];
+    )
+    .sort((a, b) => {
+      if (sortMode === "destination") {
+        return ascending
+          ? a.destination.localeCompare(b.destination)
+          : b.destination.localeCompare(a.destination);
+      } else {
+        return ascending
+          ? a.content.length - b.content.length
+          : b.content.length - a.content.length;
+      }
+    });
 
-  // ============================
-  // 🔹 Gestion du scroll & header sticky
-  // ============================
+  // =====================================
+  // 🔹 Ajustement du header
+  // =====================================
   const updateContentOffset = () => {
     const headerHeight = headerRef.current?.offsetHeight ?? 0;
     if (contentRef.current) {
@@ -111,33 +147,28 @@ const Boxes = () => {
     const ro = new ResizeObserver(() => updateContentOffset());
     if (headerRef.current) ro.observe(headerRef.current);
     window.addEventListener("resize", updateContentOffset);
-
-    const content = contentRef.current;
-    const onScroll = () => {
-      if (content) setScrolled(content.scrollTop > 0);
-    };
-    content?.addEventListener("scroll", onScroll);
-
+    const onScroll = () => setScrolled(window.scrollY > 6);
+    window.addEventListener("scroll", onScroll);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", updateContentOffset);
-      content?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
-  // ============================
+  // =====================================
   // 🔹 Helper : retrouver le nom d’un entrepôt
-  // ============================
+  // =====================================
   const getStorageName = (id: string) =>
-    storages?.find((s) => s._id === id)?.name || "Inconnu";
+    storages.find((s) => s._id === id)?.name || "Inconnu";
 
-  // ============================
+  // =====================================
   // 🔹 Rendu
-  // ============================
+  // =====================================
   return (
     <PageWrapper>
       <div className="relative min-h-screen text-white">
-        {/* ---------- Fixed Header ---------- */}
+        {/* ---------- Header ---------- */}
         <div
           ref={headerRef}
           className={`fixed left-0 right-0 top-0 z-50 px-6 py-4 border-b transition-all duration-200 ${
@@ -157,7 +188,6 @@ const Boxes = () => {
             <button
               onClick={() => navigate("/boxes/new")}
               className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-black transition bg-yellow-400 rounded-lg hover:bg-yellow-500"
-              aria-label="Ajouter une boîte"
             >
               <Plus size={18} />
             </button>
@@ -185,7 +215,6 @@ const Boxes = () => {
             <button
               onClick={() => setAscending(!ascending)}
               className="flex items-center justify-center gap-2 px-3 py-2 text-sm transition-colors bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-400"
-              aria-pressed={!ascending}
             >
               <ArrowUpDown size={16} />
               {ascending ? "Croissant" : "Décroissant"}
@@ -193,18 +222,19 @@ const Boxes = () => {
           </div>
         </div>
 
-        {/* ---------- Contenu principal ---------- */}
-        <main
-          ref={contentRef}
-          className="w-full max-w-screen-xl px-6 pb-20 mx-auto overflow-y-auto hide-scrollbar"
-        >
-          <div className="pt-6 space-y-4">
-            {loading ? (
-              <p className="text-center text-gray-400">Chargement...</p>
-            ) : error ? (
-              <p className="text-center text-red-500">{error}</p>
-            ) : filteredBoxes.length > 0 ? (
-              filteredBoxes.map((box) => (
+        {/* ---------- Contenu ---------- */}
+        <main ref={contentRef} className="max-w-4xl px-6 pb-20 mx-auto">
+          {loading ? (
+            <p className="pt-20 text-center text-gray-400">
+              Chargement des boîtes...
+            </p>
+          ) : filteredBoxes.length === 0 ? (
+            <p className="pt-20 text-center text-gray-500">
+              Aucune boîte trouvée.
+            </p>
+          ) : (
+            <div className="pt-6 space-y-4">
+              {filteredBoxes.map((box) => (
                 <div
                   key={box._id}
                   className="flex flex-col p-4 bg-gray-800 border border-gray-700 rounded-xl"
@@ -213,6 +243,7 @@ const Boxes = () => {
                     <h2 className="text-xl font-semibold text-yellow-300">
                       {box.number}
                     </h2>
+
                     <div className="flex items-center gap-3">
                       <button
                         className="p-2 transition-colors rounded hover:bg-gray-700"
@@ -222,7 +253,6 @@ const Boxes = () => {
                       </button>
                       <button
                         className="p-2 transition-colors rounded hover:bg-red-700"
-                        disabled={deleting}
                         onClick={() => handleDelete(box._id)}
                       >
                         <Trash size={18} />
@@ -230,18 +260,20 @@ const Boxes = () => {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-sm text-gray-400">
+                  <p className="text-sm text-gray-400">
                     Destination :{" "}
                     <span className="font-medium text-yellow-400">
                       {box.destination}
                     </span>
                   </p>
+
                   <p className="text-sm text-gray-400">
                     Entrepôt :{" "}
                     <span className="font-medium text-yellow-400">
                       {getStorageName(box.storageId)}
                     </span>
                   </p>
+
                   <p className="text-sm text-gray-400">
                     Objets :{" "}
                     <span className="font-medium text-yellow-400">
@@ -249,7 +281,7 @@ const Boxes = () => {
                     </span>
                   </p>
 
-                  <p className="mt-2 text-sm text-gray-400">
+                  <p className="text-sm text-gray-400">
                     Dimensions :{" "}
                     <span className="font-medium text-yellow-400">
                       {box.dimensions.width}×{box.dimensions.height}×
@@ -257,11 +289,9 @@ const Boxes = () => {
                     </span>
                   </p>
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-400">Aucune boîte trouvée.</p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
           <p className="pb-6 mt-10 text-sm text-center text-gray-500">
             Liste de vos boîtes.
