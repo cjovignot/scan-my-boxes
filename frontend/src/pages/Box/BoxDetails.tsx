@@ -154,7 +154,7 @@ const BoxDetails = () => {
               <img
                 src={box.qrcodeURL}
                 alt="QR Code"
-                className="w-48 h-48 object-contain border border-gray-700 rounded-lg bg-gray-800/60 cursor-pointer hover:scale-105 transition-transform"
+                className="object-contain w-48 h-48 transition-transform border border-gray-700 rounded-lg cursor-pointer bg-gray-800/60 hover:scale-105"
                 onClick={() => setShowModal(true)}
               />
               <p className="mt-2 text-xs text-gray-500">
@@ -189,106 +189,105 @@ const BoxDetails = () => {
         </div>
       </div>
 
-{/* 🪟 Modal d’impression */}
-{showModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-    <div className="relative max-w-full max-h-[90vh] overflow-auto p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl">
-      
-      {/* 🏷️ Wrapper de mise à l’échelle */}
-      <div
-        className="flex justify-center items-center"
-        style={{
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          className="origin-top scale-[var(--scale)]"
-          style={{
-            "--scale": 1,
-            transformOrigin: "top center",
-          }}
-          ref={(el) => {
-            if (el) {
-              // 🧠 Ajuste dynamiquement le zoom selon la taille de la fenêtre
-              const parent = el.parentElement;
-              const maxWidth = parent.offsetWidth;
-              const maxHeight = parent.offsetHeight;
-              const labelWidth = 12 * 37.8; // 1 cm ≈ 37.8 px
-              const labelHeight = 6 * 37.8;
-              const scale = Math.min(
-                maxWidth / labelWidth,
-                maxHeight / labelHeight,
-                1
-              );
-              el.style.setProperty("--scale", scale);
-            }
-          }}
-        >
-          {/* 🏷️ Étiquette à imprimer */}
-          <div
-            ref={printRef}
-            className="flex items-center justify-between bg-white text-black p-3 rounded-md border border-gray-300 mx-auto"
-            style={{
-              width: "6cm",
-              height: "12cm",
-              fontFamily: "Arial, sans-serif",
-            }}
-          >
-            {/* 🧩 QR Code */}
-            {box.qrcodeURL && (
-              <img
-                src={box.qrcodeURL}
-                alt="QR Code"
-                className="object-contain w-[5cm] h-[5cm] border border-gray-400 rounded-md"
-              />
-            )}
+      {/* 🪟 Modal d’impression */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative max-w-full max-h-[90vh] overflow-auto p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl">
+            {/* 🏷️ Wrapper de mise à l’échelle */}
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                className="origin-top scale-[var(--scale)]"
+                style={{
+                  "--scale": 1,
+                  transformOrigin: "top center",
+                }}
+                ref={(el) => {
+                  if (el) {
+                    // 🧠 Ajuste dynamiquement le zoom selon la taille de la fenêtre
+                    const parent = el.parentElement;
+                    const maxWidth = parent.offsetWidth;
+                    const maxHeight = parent.offsetHeight;
+                    const labelWidth = 12 * 37.8; // 1 cm ≈ 37.8 px
+                    const labelHeight = 6 * 37.8;
+                    const scale = Math.min(
+                      maxWidth / labelWidth,
+                      maxHeight / labelHeight,
+                      1
+                    );
+                    el.style.setProperty("--scale", scale);
+                  }
+                }}
+              >
+                {/* 🏷️ Étiquette à imprimer */}
+                <div
+                  ref={printRef}
+                  className="flex items-center justify-between p-3 mx-auto text-black bg-white border border-gray-300 rounded-md"
+                  style={{
+                    width: "12cm",
+                    height: "6cm",
+                    fontFamily: "Arial, sans-serif",
+                  }}
+                >
+                  {/* 🧩 QR Code */}
+                  {box.qrcodeURL && (
+                    <img
+                      src={box.qrcodeURL}
+                      alt="QR Code"
+                      className="object-contain w-[5cm] h-[5cm] border border-gray-400 rounded-md"
+                    />
+                  )}
 
-            {/* 📝 Infos */}
-            <div className="flex flex-col justify-center flex-1 ml-4">
-              <h2
-                className="font-bold text-gray-900"
-                style={{ fontSize: "26pt", lineHeight: "1.2" }}
+                  {/* 📝 Infos */}
+                  <div className="flex flex-col justify-center flex-1 ml-4">
+                    <h2
+                      className="font-bold text-gray-900"
+                      style={{ fontSize: "26pt", lineHeight: "1.2" }}
+                    >
+                      {box.number}
+                    </h2>
+                    <p
+                      className="mt-3 text-gray-700"
+                      style={{ fontSize: "14pt", fontWeight: 500 }}
+                    >
+                      Destination :
+                    </p>
+                    <p
+                      className="text-gray-800"
+                      style={{ fontSize: "16pt", fontWeight: 600 }}
+                    >
+                      {box.destination}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 🖨️ Boutons */}
+            <div className="flex justify-center gap-4 mt-6">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
               >
-                {box.number}
-              </h2>
-              <p
-                className="mt-3 text-gray-700"
-                style={{ fontSize: "14pt", fontWeight: 500 }}
+                <Printer size={18} />
+                Imprimer
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-sm text-gray-300 transition-colors border border-gray-700 rounded-lg hover:bg-gray-800"
               >
-                Destination :
-              </p>
-              <p
-                className="text-gray-800"
-                style={{ fontSize: "16pt", fontWeight: 600 }}
-              >
-                {box.destination}
-              </p>
+                Fermer
+              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 🖨️ Boutons */}
-      <div className="flex justify-center gap-4 mt-6">
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
-        >
-          <Printer size={18} />
-          Imprimer
-        </button>
-        <button
-          onClick={() => setShowModal(false)}
-          className="px-4 py-2 text-sm text-gray-300 transition-colors border border-gray-700 rounded-lg hover:bg-gray-800"
-        >
-          Fermer
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </>
   );
 };
