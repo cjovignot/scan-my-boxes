@@ -189,42 +189,69 @@ const BoxDetails = () => {
         </div>
       </div>
 
-      {/* 🪟 Modal d’impression */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="p-6 bg-gray-900 border border-gray-800 rounded-2xl">
-            <div ref={printRef} className="text-center text-white">
-              <h2 className="text-2xl font-semibold text-yellow-400">
-                Boîte {box.number}
-              </h2>
-              <p className="mt-1 text-gray-300">{box.destination}</p>
-              {box.qrcodeURL && (
-                <img
-                  src={box.qrcodeURL}
-                  alt="QR Code"
-                  className="w-52 h-52 mx-auto mt-4 border border-gray-700 rounded-lg bg-gray-800/50 p-2"
-                />
-              )}
-            </div>
+{/* 🪟 Modal d’impression */}
+{showModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      {/* 🏷️ Étiquette à imprimer */}
+      <div
+        ref={printRef}
+        className="flex items-center justify-between w-[12cm] h-[6cm] bg-white text-black p-3 rounded-md border border-gray-300"
+        style={{
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        {/* 🧩 QR Code à gauche */}
+        {box.qrcodeURL && (
+          <img
+            src={box.qrcodeURL}
+            alt="QR Code"
+            className="object-contain w-[5cm] h-[5cm] border border-gray-400 rounded-md"
+          />
+        )}
 
-            <div className="flex justify-center gap-4 mt-6">
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
-              >
-                <Printer size={18} />
-                Imprimer
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-300 transition-colors border border-gray-700 rounded-lg hover:bg-gray-800"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
+        {/* 📝 Infos à droite */}
+        <div className="flex flex-col justify-center flex-1 ml-4">
+          <h2
+            className="font-bold text-gray-900"
+            style={{ fontSize: "26pt", lineHeight: "1.2" }}
+          >
+            {box.number}
+          </h2>
+          <p
+            className="mt-3 text-gray-700"
+            style={{ fontSize: "14pt", fontWeight: 500 }}
+          >
+            Destination :
+          </p>
+          <p
+            className="text-gray-800"
+            style={{ fontSize: "16pt", fontWeight: 600 }}
+          >
+            {box.destination}
+          </p>
         </div>
-      )}
+      </div>
+
+      {/* 🖨️ Boutons */}
+      <div className="flex justify-center gap-4 mt-6">
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
+        >
+          <Printer size={18} />
+          Imprimer
+        </button>
+        <button
+          onClick={() => setShowModal(false)}
+          className="px-4 py-2 text-sm text-gray-300 transition-colors border border-gray-700 rounded-lg hover:bg-gray-800"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 };
