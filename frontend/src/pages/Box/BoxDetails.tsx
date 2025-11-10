@@ -214,8 +214,8 @@ const BoxDetails = () => {
                     const parent = el.parentElement;
                     const maxWidth = parent.offsetWidth;
                     const maxHeight = parent.offsetHeight;
-                    const labelWidth = 12 * 37.8; // 1 cm ≈ 37.8 px
-                    const labelHeight = 6 * 37.8;
+                    const labelWidth = 10 * 37.8; // 1 cm ≈ 37.8 px
+                    const labelHeight = 4 * 37.8;
                     const scale = Math.min(
                       maxWidth / labelWidth,
                       maxHeight / labelHeight,
@@ -230,8 +230,8 @@ const BoxDetails = () => {
                   ref={printRef}
                   className="flex items-center justify-between p-3 mx-auto text-black bg-white border border-gray-300 rounded-md"
                   style={{
-                    width: "12cm",
-                    height: "6cm",
+                    width: "10cm",
+                    height: "4cm",
                     fontFamily: "Arial, sans-serif",
                   }}
                 >
@@ -240,7 +240,7 @@ const BoxDetails = () => {
                     <img
                       src={box.qrcodeURL}
                       alt="QR Code"
-                      className="object-contain w-[5cm] h-[5cm] border border-gray-400 rounded-md"
+                      className="object-contain w-[3cm] h-[3cm] border border-gray-400 rounded-md"
                     />
                   )}
 
@@ -252,12 +252,12 @@ const BoxDetails = () => {
                     >
                       {box.number}
                     </h2>
-                    <p
+                    {/* <p
                       className="mt-3 text-gray-700"
                       style={{ fontSize: "14pt", fontWeight: 500 }}
                     >
                       Destination :
-                    </p>
+                    </p> */}
                     <p
                       className="text-gray-800"
                       style={{ fontSize: "16pt", fontWeight: 600 }}

@@ -34,7 +34,6 @@ const ScanPage = () => {
   const handleScan = (res: any) => {
     if (!res || res.length === 0) return;
     const qrValue = res[0].rawValue;
-    console.log(qrValue);
 
     if (mode === "lecture") {
       // 🔍 Extraction de l'ID de la boîte depuis l'URL
