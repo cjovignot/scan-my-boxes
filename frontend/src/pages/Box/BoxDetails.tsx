@@ -27,10 +27,18 @@ interface Box {
   updatedAt?: string;
 }
 
+interface Storage {
+  _id: string;
+  name: string;
+}
+
 const BoxDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const printRef = useRef<HTMLDivElement>(null);
+
+  const API_URL = import.meta.env.VITE_API_URL;
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const {
     data: box,
@@ -39,13 +47,33 @@ const BoxDetails = () => {
     refetch,
   } = useApi<Box>(id ? `/api/boxes/${id}` : undefined);
 
+  const [storageName, setStorageName] = useState<string>("");
+
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (id) refetch();
   }, [id]);
 
-  // 🖨️ Fonction d’impression
+  // 🏗️ Récupère le nom de l'entrepôt correspondant
+  useEffect(() => {
+    const fetchStorageName = async () => {
+      if (!box?.storageId || !user?._id) return;
+      try {
+        const res = await fetch(`${API_URL}/api/storages/${box.storageId}`);
+        if (!res.ok) throw new Error("Erreur lors du chargement de l’entrepôt");
+        const data: Storage = await res.json();
+        setStorageName(data.name);
+      } catch (err) {
+        console.error("❌ Erreur chargement entrepôt :", err);
+        setStorageName("Inconnu");
+      }
+    };
+
+    fetchStorageName();
+  }, [box?.storageId, API_URL, user]);
+
+  // 🖨️ Impression
   const handlePrint = () => {
     if (!printRef.current) return;
 
@@ -130,7 +158,9 @@ const BoxDetails = () => {
         <div className="relative w-full p-4 mx-auto bg-gray-900 border border-gray-800 rounded-2xl">
           <p className="mb-3 text-sm text-gray-300">
             Entrepôt :{" "}
-            <span className="font-medium text-yellow-400">{box.storageId}</span>
+            <span className="font-medium text-yellow-400">
+              {storageName || "Inconnu"}
+            </span>
           </p>
 
           <p className="mb-3 text-sm text-gray-300">
@@ -148,7 +178,7 @@ const BoxDetails = () => {
             </span>
           </p>
 
-          {/* ✅ QR Code affiché en grand */}
+          {/* ✅ QR Code */}
           {box.qrcodeURL && (
             <div className="flex flex-col items-center justify-center mt-6">
               <img
@@ -193,35 +223,29 @@ const BoxDetails = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative max-w-full max-h-[90vh] overflow-auto p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl">
-            {/* 🏷️ Wrapper de mise à l’échelle */}
             <div
               className="flex items-center justify-center"
-              style={{
-                width: "100%",
-                height: "100%",
-                overflow: "hidden",
-              }}
+              style={{ width: "100%", height: "100%", overflow: "hidden" }}
             >
               <div
                 className="origin-top scale-[var(--scale)]"
                 style={{
                   "--scale": 1,
                   transformOrigin: "top center",
-                }}
+                } as React.CSSProperties}
                 ref={(el) => {
                   if (el) {
-                    // 🧠 Ajuste dynamiquement le zoom selon la taille de la fenêtre
-                    const parent = el.parentElement;
+                    const parent = el.parentElement!;
                     const maxWidth = parent.offsetWidth;
                     const maxHeight = parent.offsetHeight;
-                    const labelWidth = 10 * 37.8; // 1 cm ≈ 37.8 px
+                    const labelWidth = 10 * 37.8;
                     const labelHeight = 4 * 37.8;
                     const scale = Math.min(
                       maxWidth / labelWidth,
                       maxHeight / labelHeight,
                       1
                     );
-                    el.style.setProperty("--scale", scale);
+                    el.style.setProperty("--scale", scale.toString());
                   }
                 }}
               >
@@ -235,7 +259,6 @@ const BoxDetails = () => {
                     fontFamily: "Arial, sans-serif",
                   }}
                 >
-                  {/* 🧩 QR Code */}
                   {box.qrcodeURL && (
                     <img
                       src={box.qrcodeURL}
@@ -244,7 +267,6 @@ const BoxDetails = () => {
                     />
                   )}
 
-                  {/* 📝 Infos */}
                   <div className="flex flex-col justify-center flex-1 ml-4">
                     <h2
                       className="font-bold text-gray-900"
@@ -252,12 +274,6 @@ const BoxDetails = () => {
                     >
                       {box.number}
                     </h2>
-                    {/* <p
-                      className="mt-3 text-gray-700"
-                      style={{ fontSize: "14pt", fontWeight: 500 }}
-                    >
-                      Destination :
-                    </p> */}
                     <p
                       className="text-gray-800"
                       style={{ fontSize: "16pt", fontWeight: 600 }}
@@ -269,7 +285,6 @@ const BoxDetails = () => {
               </div>
             </div>
 
-            {/* 🖨️ Boutons */}
             <div className="flex justify-center gap-4 mt-6">
               <button
                 onClick={handlePrint}
