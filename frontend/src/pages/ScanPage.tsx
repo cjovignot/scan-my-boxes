@@ -34,9 +34,20 @@ const ScanPage = () => {
   const handleScan = (res: any) => {
     if (!res || res.length === 0) return;
     const qrValue = res[0].rawValue;
+    console.log(qrValue);
 
     if (mode === "lecture") {
-      navigate(`/boxdetail/${qrValue}`);
+      // 🔍 Extraction de l'ID de la boîte depuis l'URL
+      const match = qrValue.match(/\/box\/([a-f0-9]{24})$/);
+      const boxId = match ? match[1] : null;
+
+      if (!boxId) {
+        alert("❌ QR code invalide ou ID non détecté.");
+        return;
+      }
+
+      // ✅ Redirection directe vers la page de détails
+      navigate(`/box/boxdetails/${boxId}`);
     } else if (mode === "stockage") {
       setScannedBoxes((prev) =>
         prev.includes(qrValue) ? prev : [...prev, qrValue]
