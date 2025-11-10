@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 
@@ -8,18 +8,13 @@ const ScanPage = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // ===============================
-  // 🔹 États
-  // ===============================
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"lecture" | "stockage">("lecture");
   const [selectedStorage, setSelectedStorage] = useState("");
   const [scannedBoxes, setScannedBoxes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  // ===============================
-  // 🔹 Chargement des entrepôts
-  // ===============================
   const {
     data: storages,
     loading: loadingStorages,
@@ -28,15 +23,11 @@ const ScanPage = () => {
     user?._id ? `/api/storages?ownerId=${user._id}` : undefined
   );
 
-  // ===============================
-  // 🔹 Gestion du scan
-  // ===============================
   const handleScan = (res: any) => {
     if (!res || res.length === 0) return;
     const qrValue = res[0].rawValue;
 
     if (mode === "lecture") {
-      // 🔍 Extraction de l'ID de la boîte depuis l'URL
       const match = qrValue.match(/\/box\/([a-f0-9]{24})$/);
       const boxId = match ? match[1] : null;
 
@@ -44,8 +35,6 @@ const ScanPage = () => {
         alert("❌ QR code invalide ou ID non détecté.");
         return;
       }
-
-      // ✅ Redirection directe vers la page de détails
       navigate(`/box/boxdetails/${boxId}`);
     } else if (mode === "stockage") {
       setScannedBoxes((prev) =>
@@ -54,9 +43,6 @@ const ScanPage = () => {
     }
   };
 
-  // ===============================
-  // 🔹 Fin de saisie (stockage)
-  // ===============================
   const handleSave = async () => {
     if (!selectedStorage) {
       alert("❌ Sélectionnez un entrepôt avant d’enregistrer.");
@@ -83,6 +69,7 @@ const ScanPage = () => {
       if (data.success) {
         alert("✅ Boîtes enregistrées avec succès !");
         setScannedBoxes([]);
+        setShowModal(false);
       } else {
         throw new Error(data.message || "Erreur d’enregistrement");
       }
@@ -94,9 +81,6 @@ const ScanPage = () => {
     }
   };
 
-  // ===============================
-  // 🔹 Rendu
-  // ===============================
   return (
     <div className="fixed inset-0 z-50 flex flex-col text-white bg-black">
       {/* Barre du haut */}
@@ -118,7 +102,7 @@ const ScanPage = () => {
       <div className="flex flex-col items-center flex-1 px-4 py-6">
         {/* Scanner */}
         <div className="relative w-full max-w-md overflow-hidden border border-gray-700 aspect-square rounded-2xl">
-          {/* Toggle superposé */}
+          {/* Toggle */}
           <div className="absolute z-20 flex items-center gap-2 px-2 py-1 -translate-x-1/2 border border-gray-600 rounded-full top-3 left-1/2 bg-black/60 backdrop-blur-sm w-fit">
             <span className="text-xs text-gray-300 whitespace-nowrap">
               Mode lecture
@@ -156,7 +140,7 @@ const ScanPage = () => {
           <p className="mt-3 text-sm text-center text-red-400">{error}</p>
         )}
 
-        {/* Sélecteur d’entrepôt (mode stockage uniquement) */}
+        {/* Sélecteur d’entrepôt */}
         {mode === "stockage" && (
           <div className="w-full max-w-md mt-4 mb-4">
             <div className="relative">
@@ -183,45 +167,77 @@ const ScanPage = () => {
                 className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-1/2"
               />
             </div>
-          </div>
-        )}
 
-        {mode === "lecture" ? (
-          <p className="mt-4 text-sm text-gray-400">
-            Oriente ton appareil vers un QR code pour afficher la boîte.
-          </p>
-        ) : (
-          <div className="w-full max-w-md mt-4">
-            <h3 className="mb-2 text-yellow-400">
-              Boîtes scannées ({scannedBoxes.length})
-            </h3>
-            {scannedBoxes.length === 0 ? (
-              <p className="text-sm text-gray-400">
-                Aucune boîte scannée pour l’instant.
-              </p>
-            ) : (
-              <ul className="p-2 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg max-h-40">
-                {scannedBoxes.map((b) => (
-                  <li
-                    key={b}
-                    className="py-1 text-sm text-gray-300 border-b border-gray-700 last:border-none"
-                  >
-                    📦 {b}
-                  </li>
-                ))}
-              </ul>
-            )}
-
+            {/* Bouton pour voir la saisie */}
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full px-4 py-2 mt-4 text-black bg-yellow-400 rounded-lg hover:bg-yellow-500 disabled:opacity-60"
+              onClick={() => setShowModal(true)}
+              disabled={scannedBoxes.length === 0}
+              className="w-full px-4 py-2 mt-4 text-sm text-black bg-yellow-400 rounded-lg hover:bg-yellow-500 disabled:opacity-50"
             >
-              {saving ? "Enregistrement..." : "✅ Fin de saisie"}
+              Voir la saisie ({scannedBoxes.length})
             </button>
           </div>
         )}
+
+        {mode === "lecture" && (
+          <p className="mt-4 text-sm text-gray-400">
+            Oriente ton appareil vers un QR code pour afficher la boîte.
+          </p>
+        )}
       </div>
+
+      {/* =============================== */}
+      {/* 🪟 MODAL DE SAISIE */}
+      {/* =============================== */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="flex flex-col w-full max-w-md overflow-hidden bg-gray-950 border border-gray-700 rounded-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+              <h3 className="text-yellow-400">
+                Boîtes scannées ({scannedBoxes.length})
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Contenu scrollable */}
+            <div className="flex-1 p-3 overflow-y-auto max-h-[60vh]">
+              {scannedBoxes.length === 0 ? (
+                <p className="text-sm text-gray-400">
+                  Aucune boîte scannée pour l’instant.
+                </p>
+              ) : (
+                <ul className="space-y-1">
+                  {scannedBoxes.map((b) => (
+                    <li
+                      key={b}
+                      className="py-1 text-sm text-gray-300 border-b border-gray-800 last:border-none"
+                    >
+                      📦 {b}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-800 bg-gray-900/70">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full px-4 py-2 text-black bg-yellow-400 rounded-lg hover:bg-yellow-500 disabled:opacity-60"
+              >
+                {saving ? "Enregistrement..." : "✅ Fin de saisie"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
