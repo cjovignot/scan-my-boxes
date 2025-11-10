@@ -105,15 +105,14 @@ const BoxDetails = () => {
 
 // 🔍 Zoom adaptatif
 useEffect(() => {
-  const wrapper = document.querySelector(".transform.origin-top") as HTMLElement;
+  const wrapper = document.querySelector(".label-wrapper") as HTMLElement;
   if (!wrapper) return;
 
   const updateScale = () => {
     const maxWidth = window.innerWidth * 0.8;
     const maxHeight = window.innerHeight * 0.6;
-    const labelWidth = 12 * 37.8; // cm → px (1 cm ≈ 37.8 px)
+    const labelWidth = 12 * 37.8; // cm -> px
     const labelHeight = 6 * 37.8;
-
     const scale = Math.min(maxWidth / labelWidth, maxHeight / labelHeight, 1);
     wrapper.style.transform = `scale(${scale})`;
   };
@@ -215,7 +214,7 @@ useEffect(() => {
     <div className="relative max-w-full max-h-[90vh] p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl flex flex-col items-center">
       {/* 🏷️ Wrapper pour le zoom visuel */}
       <div
-        className="transform origin-top"
+        className="label-wrapper transform origin-top"
         style={{
           transform: "scale(1)",
           maxWidth: "100%",
