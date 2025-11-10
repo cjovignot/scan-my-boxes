@@ -248,7 +248,8 @@ const Boxes = () => {
               {filteredBoxes.map((box) => (
                 <div
                   key={box._id}
-                  className="flex flex-col p-4 bg-gray-800 border border-gray-700 rounded-xl"
+                  className="flex flex-col p-4 transition-colors bg-gray-800 border border-gray-700 cursor-pointer rounded-xl hover:bg-gray-700"
+                  onClick={() => navigate(`/box/boxdetails/${box._id}`)} // ← navigation vers BoxDetails
                 >
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-yellow-400">
@@ -258,13 +259,19 @@ const Boxes = () => {
                     <div className="flex items-center gap-3">
                       <button
                         className="p-2 transition-colors rounded hover:bg-gray-700"
-                        onClick={() => navigate(`/boxes/edit/${box._id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // empêcher le onClick du parent
+                          navigate(`/boxes/edit/${box._id}`);
+                        }}
                       >
                         <Pencil size={18} />
                       </button>
                       <button
                         className="p-2 transition-colors rounded hover:bg-red-700"
-                        onClick={() => handleDelete(box._id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // empêcher le onClick du parent
+                          handleDelete(box._id);
+                        }}
                       >
                         <Trash size={18} />
                       </button>
