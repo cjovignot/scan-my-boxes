@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Printer } from "lucide-react";
 import { motion } from "framer-motion";
 import { useApi } from "../../hooks/useApi";
-import * as htmlToImage from "html-to-image";
 
 interface ContentItem {
   _id: string;
@@ -49,8 +48,8 @@ const BoxDetails = () => {
   } = useApi<Box>(id ? `/api/boxes/${id}` : undefined);
 
   const [storageName, setStorageName] = useState<string>("");
+
   const [showModal, setShowModal] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) refetch();
@@ -74,52 +73,29 @@ const BoxDetails = () => {
     fetchStorageName();
   }, [box?.storageId, API_URL, user]);
 
-  // 🖼️ Génération d'une image à partir de l'étiquette
-  const handleGenerateImage = async () => {
+  // 🖨️ Impression
+  const handlePrint = () => {
     if (!printRef.current) return;
-    try {
-      const dataUrl = await htmlToImage.toPng(printRef.current, {
-        width: 378,   // 10 cm × 37.8 px/cm
-        height: 151,  // 4 cm × 37.8 px/cm
-        pixelRatio: 3 // meilleure résolution
-      });
-      setGeneratedImage(dataUrl);
-    } catch (err) {
-      console.error("Erreur génération image :", err);
-    }
-  };
 
-  // 🖨️ Impression directe de l’image générée
-  const handlePrintImage = () => {
-    if (!generatedImage) return;
-    const printWindow = window.open("", "_blank", "width=600,height=400");
+    const printContents = printRef.current.innerHTML;
+    const printWindow = window.open("", "_blank", "width=600,height=800");
     if (!printWindow) return;
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Étiquette</title>
+          <title>Impression QR Box</title>
           <style>
-            @page { size: 10cm 4cm; margin: 0; }
-            body {
-              margin: 0;
-              padding: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              width: 10cm;
-              height: 4cm;
-            }
-            img {
-              width: 10cm;
-              height: 4cm;
-            }
+            body { font-family: sans-serif; text-align: center; padding: 20px; }
+            h2 { color: #444; margin-bottom: 8px; }
+            p { color: #666; margin: 4px 0; }
+            img { width: 200px; height: 200px; margin-top: 10px; }
           </style>
         </head>
         <body>
-          <img src="${generatedImage}" alt="Étiquette QR" />
+          ${printContents}
           <script>
-            window.onload = () => {
+            window.onload = function() {
               window.print();
               window.onafterprint = () => window.close();
             };
@@ -127,6 +103,7 @@ const BoxDetails = () => {
         </body>
       </html>
     `);
+
     printWindow.document.close();
   };
 
@@ -208,15 +185,46 @@ const BoxDetails = () => {
                 src={box.qrcodeURL}
                 alt="QR Code"
                 className="object-contain w-48 h-48 transition-transform border border-gray-700 rounded-lg cursor-pointer bg-gray-800/60 hover:scale-105"
-                onClick={() => {
-                  setShowModal(true);
-                  handleGenerateImage(); // 🔥 génère l’image dès ouverture du modal
-                }}
+                onClick={() => setShowModal(true)}
               />
               <p className="mt-2 text-xs text-gray-500">
                 Cliquez pour imprimer le QR code
               </p>
             </div>
+          )}
+
+          {/* 📦 Contenu */}
+          <div className="mt-6 mb-4 font-medium text-yellow-400">
+            Contenu de la boîte
+          </div>
+          {box.content.length > 0 ? (
+            <ul className="space-y-2">
+              {box.content.map((item, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start justify-start gap-3 px-3 py-2 text-sm text-gray-200 bg-gray-800 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    {item.picture && (
+                      <img
+                        src={item.picture}
+                        alt={item.name}
+                        className="object-cover w-20 h-20 border border-gray-700 rounded-lg"
+                      />
+                    )}
+                  </div>
+                  <span className="font-medium">{item.name}</span>
+
+                  {item.quantity && (
+                    <span className="text-gray-400">x{item.quantity}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Aucun élément dans cette boîte.
+            </p>
           )}
         </div>
       </div>
@@ -225,79 +233,73 @@ const BoxDetails = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative max-w-full max-h-[90vh] overflow-auto p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl">
-            {/* 🏷️ Étiquette originale invisible (pour capture) */}
             <div
-              ref={printRef}
-              style={{
-                width: "10cm",
-                height: "4cm",
-                background: "white",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: "1px solid #ccc",
-                padding: "0.3cm",
-              }}
-              className="hidden"
+              className="flex items-center justify-center"
+              style={{ width: "100%", height: "100%", overflow: "hidden" }}
             >
-              {box.qrcodeURL && (
-                <img
-                  src={box.qrcodeURL}
-                  alt="QR Code"
+              <div
+                className="origin-top scale-[var(--scale)]"
+                style={
+                  {
+                    "--scale": 1,
+                    transformOrigin: "top center",
+                  } as React.CSSProperties
+                }
+                ref={(el) => {
+                  if (el) {
+                    const parent = el.parentElement!;
+                    const maxWidth = parent.offsetWidth;
+                    const maxHeight = parent.offsetHeight;
+                    const labelWidth = 10 * 37.8;
+                    const labelHeight = 4 * 37.8;
+                    const scale = Math.min(
+                      maxWidth / labelWidth,
+                      maxHeight / labelHeight,
+                      1
+                    );
+                    el.style.setProperty("--scale", scale.toString());
+                  }
+                }}
+              >
+                {/* 🏷️ Étiquette à imprimer */}
+                <div
+                  ref={printRef}
+                  className="flex items-center justify-between p-3 mx-auto text-black bg-white border border-gray-300 rounded-md"
                   style={{
-                    width: "3cm",
-                    height: "3cm",
-                    border: "1px solid #999",
-                    borderRadius: "4px",
-                  }}
-                />
-              )}
-              <div style={{ marginLeft: "1cm", flex: 1 }}>
-                <h2
-                  style={{
-                    fontSize: "26pt",
-                    margin: 0,
-                    fontWeight: "bold",
-                    color: "#111",
+                    width: "10cm",
+                    height: "4cm",
+                    fontFamily: "Arial, sans-serif",
                   }}
                 >
-                  {box.number}
-                </h2>
-                <p
-                  style={{
-                    fontSize: "16pt",
-                    fontWeight: 600,
-                    margin: 0,
-                    color: "#333",
-                  }}
-                >
-                  {box.destination}
-                </p>
+                  {box.qrcodeURL && (
+                    <img
+                      src={box.qrcodeURL}
+                      alt="QR Code"
+                      className="object-contain w-[3cm] h-[3cm] border border-gray-400 rounded-md"
+                    />
+                  )}
+
+                  <div className="flex flex-col justify-center flex-1 ml-4">
+                    <h2
+                      className="font-bold text-gray-900"
+                      style={{ fontSize: "26pt", lineHeight: "1.2" }}
+                    >
+                      {box.number}
+                    </h2>
+                    <p
+                      className="text-gray-800"
+                      style={{ fontSize: "16pt", fontWeight: 600 }}
+                    >
+                      {box.destination}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* 🖼️ Aperçu de l’image générée */}
-            {generatedImage ? (
-              <img
-                src={generatedImage}
-                alt="Étiquette générée"
-                style={{
-                  width: "10cm",
-                  height: "4cm",
-                  border: "1px solid #666",
-                  borderRadius: "6px",
-                }}
-              />
-            ) : (
-              <p className="text-gray-400 text-sm text-center">
-                Génération de l’image en cours...
-              </p>
-            )}
-
-            {/* 🔘 Boutons */}
             <div className="flex justify-center gap-4 mt-6">
               <button
-                onClick={handlePrintImage}
+                onClick={handlePrint}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
               >
                 <Printer size={18} />
