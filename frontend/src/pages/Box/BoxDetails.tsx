@@ -72,13 +72,26 @@ const BoxDetails = () => {
     fetchStorageName();
   }, [box?.storageId, API_URL, user]);
 
-  // 🧩 Génération automatique de l’image de l’étiquette
+  // 🧩 Génération automatique de l’image de l’étiquette après chargement des images
   useEffect(() => {
     if (!box || !labelRef.current) return;
 
     const generateLabel = async () => {
       try {
         setGenerating(true);
+
+        // Attendre que toutes les images dans le label soient chargées
+        const images = Array.from(labelRef.current.querySelectorAll("img"));
+        await Promise.all(
+          images.map(
+            (img) =>
+              new Promise<void>((resolve) => {
+                if (img.complete) resolve();
+                else img.onload = () => resolve();
+              })
+          )
+        );
+
         const dataUrl = await htmlToImage.toPng(labelRef.current, {
           quality: 1,
           backgroundColor: "#fff",
@@ -187,6 +200,21 @@ const BoxDetails = () => {
           </h1>
         </motion.div>
 
+        {/* ✅ QR Code cliquable en haut */}
+        {box.qrcodeURL && (
+          <div className="flex flex-col items-center justify-center mb-6">
+            <img
+              src={box.qrcodeURL}
+              alt="QR Code"
+              className="object-contain w-48 h-48 transition-transform border border-gray-700 rounded-lg cursor-pointer bg-gray-800/60 hover:scale-105"
+              onClick={() => setShowModal(true)}
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Cliquez pour générer et imprimer l’étiquette
+            </p>
+          </div>
+        )}
+
         {/* 🗃️ Informations */}
         <div className="relative w-full p-4 mx-auto bg-gray-900 border border-gray-800 rounded-2xl">
           <p className="mb-3 text-sm text-gray-300">
@@ -242,21 +270,6 @@ const BoxDetails = () => {
             </p>
           )}
         </div>
-
-        {/* ✅ QR Code */}
-        {box.qrcodeURL && (
-          <div className="flex flex-col items-center justify-center mt-6">
-            <img
-              src={box.qrcodeURL}
-              alt="QR Code"
-              className="object-contain w-48 h-48 transition-transform border border-gray-700 rounded-lg cursor-pointer bg-gray-800/60 hover:scale-105"
-              onClick={() => setShowModal(true)}
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              Cliquez pour imprimer le QR code
-            </p>
-          </div>
-        )}
       </div>
 
       {/* 🪟 Modal d’impression */}
