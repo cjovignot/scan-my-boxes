@@ -91,9 +91,6 @@ const BoxCreate = () => {
     setContentItems(updated);
   };
 
-  // ============================
-  // 🔹 Upload d’image
-  // ============================
   const handleImageUpload = async (index: number, file: File) => {
     const updated = [...contentItems];
     updated[index].uploading = true;
@@ -102,6 +99,10 @@ const BoxCreate = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append(
+        "upload_preset",
+        import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+      );
 
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${
