@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IContentItem {
   name: string;
@@ -7,8 +7,8 @@ export interface IContentItem {
 }
 
 export interface IBox extends Document {
-  ownerId: string;
-  storageId: string;
+  ownerId: Types.ObjectId; // ✅ corrigé : ObjectId au lieu de string
+  storageId: Types.ObjectId; // ✅ corrigé aussi
   number: string;
   fragile: boolean;
   content: IContentItem[];
@@ -34,10 +34,10 @@ const contentItemSchema = new Schema<IContentItem>(
 
 const boxSchema = new Schema<IBox>(
   {
-    ownerId: { type: String, required: true, index: true },
-    storageId: { type: String, required: true },
+    ownerId: { type: Types.ObjectId, ref: "User", required: true, index: true }, // ✅
+    storageId: { type: Types.ObjectId, ref: "Storage", required: true }, // ✅
     number: { type: String, required: true },
-    fragile: { type: Boolean, required: false },
+    fragile: { type: Boolean, default: false },
     content: { type: [contentItemSchema], default: [] },
     destination: { type: String, default: "Inconnu" },
     qrcodeURL: { type: String },
