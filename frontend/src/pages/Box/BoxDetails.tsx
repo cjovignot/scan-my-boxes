@@ -191,11 +191,8 @@ const BoxDetails = () => {
             background: "#fff",
             color: "#000",
             fontFamily: "Arial, sans-serif",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
           }}
-className="p-4 mx-auto object-contain transition-transform rounded-lg cursor-pointer scale-80 hover:scale-100"
+className="flex justify-center items-center p-4 mx-auto object-contain transition-transform rounded-lg cursor-pointer scale-80 hover:scale-100"
 onClick={() => setShowModal(true)}
         >
           {box.qrcodeURL && (
