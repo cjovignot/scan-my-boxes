@@ -81,6 +81,32 @@ const Storages = () => {
     };
   }, []);
 
+  // --- Suppression d’un entrepôt ---
+  const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm("🗑️ Supprimer cet entrepôt ?");
+
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/storages/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erreur lors de la suppression");
+      }
+
+      // ✅ Met à jour la liste sans recharger la page
+      setStorages((prev) => prev.filter((s) => s._id !== id));
+
+      alert("✅ Entrepôt supprimé avec succès !");
+    } catch (err) {
+      console.error("Erreur lors de la suppression :", err);
+      alert("❌ Impossible de supprimer l’entrepôt.");
+    }
+  };
+
   return (
     <PageWrapper>
       <div className="relative min-h-screen text-white">
@@ -174,7 +200,10 @@ const Storages = () => {
                       <button className="p-2 transition-colors rounded hover:bg-gray-700">
                         <Pencil size={18} />
                       </button>
-                      <button className="p-2 transition-colors rounded hover:bg-red-700">
+                      <button
+                        onClick={() => handleDelete(storage._id)}
+                        className="p-2 transition-colors rounded hover:bg-red-700"
+                      >
                         <Trash size={18} />
                       </button>
                     </div>

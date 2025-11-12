@@ -2,6 +2,8 @@ import { Router } from "express";
 import dotenv from "dotenv";
 import path from "path";
 import { connectDB } from "../utils/db";
+import { Box } from "../models/Box";
+import { Types } from "mongoose";
 import {
   createStorage,
   findAllStorages,
@@ -90,16 +92,33 @@ router.patch("/:id", async (req, res) => {
 });
 
 // ===================================
-// 🔹 DELETE - Suppression d’un entrepôt
+// 🔴 DELETE - Suppression d’un entrepôt et des boîtes associées
 // ===================================
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await deleteStorageById(req.params.id);
-    if (!deleted) {
+    const storageIdStr = req.params.id;
+
+    if (!Types.ObjectId.isValid(storageIdStr)) {
+      return res.status(400).json({ error: "ID d'entrepôt invalide." });
+    }
+
+    const storageId = new Types.ObjectId(storageIdStr);
+
+    // 🗑️ Supprimer les boîtes associées
+    const deleteResult = await Box.deleteMany({ storageId });
+    console.log(
+      `🗑️ ${deleteResult.deletedCount} boîtes supprimées pour storage ${storageIdStr}`
+    );
+
+    // 🏭 Supprimer l’entrepôt
+    const deletedStorage = await deleteStorageById(storageIdStr);
+    if (!deletedStorage) {
       return res.status(404).json({ error: "Entrepôt introuvable." });
     }
 
-    res.json({ message: "🗑️ Entrepôt supprimé." });
+    return res.json({
+      message: `Entrepôt supprimé (${deleteResult.deletedCount} boîtes supprimées).`,
+    });
   } catch (error) {
     console.error("Erreur suppression entrepôt :", error);
     res.status(500).json({ error: "Erreur serveur." });

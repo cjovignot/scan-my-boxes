@@ -116,24 +116,24 @@ const Boxes = () => {
   // 🔹 Filtrage + tri
   // =====================================
   const filteredBoxes = boxes
-  .filter((box) =>
-    search === ""
-      ? true // si rien à chercher, on garde toutes les boîtes
-      : box.content.some((item) =>
-          item.name.toLowerCase().includes(search.toLowerCase())
-        )
-  )
-  .sort((a, b) => {
-    if (sortMode === "destination") {
-      return ascending
-        ? a.destination.localeCompare(b.destination)
-        : b.destination.localeCompare(a.destination);
-    } else {
-      return ascending
-        ? a.content.length - b.content.length
-        : b.content.length - a.content.length;
-    }
-  });
+    .filter((box) =>
+      search === ""
+        ? true // si rien à chercher, on garde toutes les boîtes
+        : box.content.some((item) =>
+            item.name.toLowerCase().includes(search.toLowerCase())
+          )
+    )
+    .sort((a, b) => {
+      if (sortMode === "destination") {
+        return ascending
+          ? a.destination.localeCompare(b.destination)
+          : b.destination.localeCompare(a.destination);
+      } else {
+        return ascending
+          ? a.content.length - b.content.length
+          : b.content.length - a.content.length;
+      }
+    });
 
   // =====================================
   // 🔹 Ajustement du header
@@ -248,72 +248,77 @@ const Boxes = () => {
           ) : (
             <div className="pt-2 space-y-4">
               {filteredBoxes.map((box) => (
-<div
-  key={box._id}
-  className="relative flex flex-col p-4 transition-colors bg-gray-800 border border-gray-700 cursor-pointer rounded-xl hover:bg-gray-700"
-  onClick={() => navigate(`/box/boxdetails/${box._id}`)} // ← navigation vers BoxDetails
->
-  <div className="flex items-center justify-between">
-    <h2 className="text-xl font-semibold text-yellow-400">{box.number}</h2>
+                <div
+                  key={box._id}
+                  className="relative flex flex-col p-4 transition-colors bg-gray-800 border border-gray-700 cursor-pointer rounded-xl hover:bg-gray-700"
+                  onClick={() => navigate(`/box/boxdetails/${box._id}`)} // ← navigation vers BoxDetails
+                >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-yellow-400">
+                      {box.number}
+                    </h2>
 
-    <div className="flex items-center gap-3">
-      <button
-        className="p-2 transition-colors rounded hover:bg-gray-700"
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/boxes/edit/${box._id}`);
-        }}
-      >
-        <Pencil size={18} />
-      </button>
-      <button
-        className="p-2 transition-colors rounded hover:bg-red-700"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDelete(box._id);
-        }}
-      >
-        <Trash size={18} />
-      </button>
-    </div>
-  </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="p-2 transition-colors rounded hover:bg-gray-700"
+                        // onClick={(e) => {
+                        //   e.stopPropagation();
+                        //   navigate(`/boxes/edit/${box._id}`);
+                        // }}
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        className="p-2 transition-colors rounded hover:bg-red-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(box._id);
+                        }}
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  </div>
 
-  <p className="text-sm text-gray-400">
-    Destination :{" "}
-    <span className="font-medium text-yellow-400">{box.destination}</span>
-  </p>
+                  <p className="text-sm text-gray-400">
+                    Destination :{" "}
+                    <span className="font-medium text-yellow-400">
+                      {box.destination}
+                    </span>
+                  </p>
 
-  <p className="text-sm text-gray-400">
-    Entrepôt :{" "}
-    <span className="font-medium text-yellow-400">
-      {getStorageName(box.storageId)}
-    </span>
-  </p>
+                  <p className="text-sm text-gray-400">
+                    Entrepôt :{" "}
+                    <span className="font-medium text-yellow-400">
+                      {getStorageName(box.storageId)}
+                    </span>
+                  </p>
 
-  <p className="text-sm text-gray-400">
-    Objets :{" "}
-    <span className="font-medium text-yellow-400">
-      {box.content.length}
-    </span>
-  </p>
+                  <p className="text-sm text-gray-400">
+                    Objets :{" "}
+                    <span className="font-medium text-yellow-400">
+                      {box.content.length}
+                    </span>
+                  </p>
 
-  <p className="text-sm text-gray-400">
-    Dimensions :{" "}
-    <span className="font-medium text-yellow-400">
-      {box.dimensions.width}×{box.dimensions.height}×{box.dimensions.depth} cm
-    </span>
-  </p>
+                  <p className="text-sm text-gray-400">
+                    Dimensions :{" "}
+                    <span className="font-medium text-yellow-400">
+                      {box.dimensions.width}×{box.dimensions.height}×
+                      {box.dimensions.depth} cm
+                    </span>
+                  </p>
 
-  {/* ✅ QR code affiché en bas à droite */}
-  {box.qrcodeURL && (
-    <img
-      src={box.qrcodeURL}
-      alt="QR Code"
-      className="absolute bottom-2 right-2 w-16 h-16 object-contain opacity-80 hover:opacity-100 transition-opacity border border-gray-600 rounded-md bg-gray-900/40 p-1"
-      onClick={(e) => e.stopPropagation()} // évite d’ouvrir la fiche en cliquant sur le QR
-    />
-  )}
-</div>
+                  {/* ✅ QR code affiché en bas à droite */}
+                  {box.qrcodeURL && (
+                    <img
+                      src={box.qrcodeURL}
+                      alt="QR Code"
+                      className="absolute object-contain w-16 h-16 p-1 transition-opacity border border-gray-600 rounded-md bottom-2 right-2 opacity-80 hover:opacity-100 bg-gray-900/40"
+                      onClick={(e) => e.stopPropagation()} // évite d’ouvrir la fiche en cliquant sur le QR
+                    />
+                  )}
+                </div>
               ))}
             </div>
           )}
