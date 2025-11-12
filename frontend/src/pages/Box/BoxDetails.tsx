@@ -285,7 +285,7 @@ onClick={() => setShowModal(true)}
               <img
                 src={labelImage}
                 alt="Étiquette générée"
-                className="h-auto max-w-full mx-auto border border-gray-700 rounded-md"
+                className="h-auto max-w-full mx-auto border border-gray-700 rounded-md scale-100"
               />
             ) : (
               <p className="text-gray-400">❌ Échec de génération</p>
