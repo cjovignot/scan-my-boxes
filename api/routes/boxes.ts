@@ -3,7 +3,6 @@ import { Box } from "../models/Box";
 import { Types } from "mongoose";
 import QRCode from "qrcode";
 import cloudinary from "cloudinary";
-import { Storage } from "models/Storage";
 import { updateStorageById } from "../controllers/storageController";
 
 cloudinary.v2.config({
@@ -16,23 +15,21 @@ const router = express.Router();
 
 /**
  * 🟢 GET /api/boxes
- * Liste toutes les boîtes (possibilité de filtrer par ownerId ou storageId)
+ * Liste toutes les boîtes (filtrables par ownerId ou storageId)
  */
 router.get("/", async (req, res) => {
   try {
     const { ownerId, storageId } = req.query;
-
     const filter: any = {};
 
     if (ownerId) {
-      // ✅ Cast auto vers ObjectId si possible
-      filter.ownerId = Types.ObjectId.isValid(ownerId)
+      filter.ownerId = Types.ObjectId.isValid(ownerId as string)
         ? new Types.ObjectId(ownerId as string)
         : ownerId;
     }
 
     if (storageId) {
-      filter.storageId = Types.ObjectId.isValid(storageId)
+      filter.storageId = Types.ObjectId.isValid(storageId as string)
         ? new Types.ObjectId(storageId as string)
         : storageId;
     }
@@ -46,40 +43,46 @@ router.get("/", async (req, res) => {
 });
 
 /**
+ * 🟢 GET /api/boxes/:id
+ * Récupère une boîte spécifique par ID
+ */
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!Types.ObjectId.isValid(id)) return res.status(400).json({ error: "ID invalide" });
+
+    const box = await Box.findById(id);
+    if (!box) return res.status(404).json({ error: "Boîte introuvable" });
+
+    res.json(box);
+  } catch (err) {
+    console.error("Erreur lors de la récupération de la boîte :", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+/**
  * 🟢 POST /api/boxes
- * Crée une nouvelle boîte (numéro auto + QR code Cloudinary)
+ * Crée une nouvelle boîte
  */
 router.post("/", async (req, res) => {
   try {
-    const { ownerId, storageId, destination, content, dimensions } = req.body;
+    const { ownerId, storageId, destination, content, dimensions, fragile } = req.body;
+    if (!ownerId || !storageId) return res.status(400).json({ error: "ownerId et storageId sont requis" });
 
-    if (!ownerId || !storageId) {
-      return res
-        .status(400)
-        .json({ error: "ownerId et storageId sont requis" });
-    }
+    const ownerObjectId = Types.ObjectId.isValid(ownerId) ? new Types.ObjectId(ownerId) : ownerId;
+    const storageObjectId = Types.ObjectId.isValid(storageId) ? new Types.ObjectId(storageId) : storageId;
 
-    // ✅ Cast propre vers ObjectId pour cohérence avec la base
-    const ownerObjectId = Types.ObjectId.isValid(ownerId)
-      ? new Types.ObjectId(ownerId)
-      : ownerId;
-
-    const storageObjectId = Types.ObjectId.isValid(storageId)
-      ? new Types.ObjectId(storageId)
-      : storageId;
-
-    // 🔢 Génère un numéro unique basé sur le nombre de boîtes du user
-    const userBoxes = await Box.find({ ownerId: ownerObjectId }).sort({
-      createdAt: 1,
-    });
+    // Numéro unique par user
+    const userBoxes = await Box.find({ ownerId: ownerObjectId }).sort({ createdAt: 1 });
     const nextNumber = (userBoxes.length + 1).toString().padStart(3, "0");
     const boxNumber = `BOX-${nextNumber}`;
 
-    // 🗃️ Création de la nouvelle boîte
     const newBox = new Box({
       ownerId: ownerObjectId,
       storageId: storageObjectId,
       number: boxNumber,
+      fragile: fragile || false,
       destination: destination || "Inconnu",
       content: content || [],
       dimensions: {
@@ -89,38 +92,61 @@ router.post("/", async (req, res) => {
       },
     });
 
-    // 💾 Enregistre la boîte
     const savedBox = await newBox.save();
 
-    // 🔗 Ajoute la boîte à l'entrepôt correspondant
-    const updatedStorage = await updateStorageById(storageObjectId.toString(), {
-      $addToSet: { boxes: savedBox._id },
-    });
+    // Ajoute la boîte à l'entrepôt
+    await updateStorageById(storageObjectId.toString(), { $addToSet: { boxes: savedBox._id } });
 
-    if (!updatedStorage) {
-      console.warn("⚠️ Entrepôt introuvable pour ajout de boîte");
-    }
-
-    // 🧾 Génère un QR code avec l’URL publique de la boîte
-    const boxURL = `${
-      process.env.FRONTEND_URL || "https://scanmyboxes.app"
-    }/box/${savedBox._id}`;
+    // Génère QR code et upload Cloudinary
+    const boxURL = `${process.env.FRONTEND_URL || "https://scanmyboxes.app"}/box/${savedBox._id}`;
     const qrCodeDataURL = await QRCode.toDataURL(boxURL);
 
-    // ☁️ Upload du QR code sur Cloudinary
     const uploadResponse = await cloudinary.v2.uploader.upload(qrCodeDataURL, {
       folder: "scan-my-boxes/qrcodes",
       public_id: `qrcode_${savedBox._id}`,
       overwrite: true,
     });
 
-    // 🧩 Met à jour la boîte avec l’URL du QR code
     savedBox.qrcodeURL = uploadResponse.secure_url;
     await savedBox.save();
 
     res.status(201).json(savedBox);
   } catch (err) {
     console.error("Erreur création boîte :", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+/**
+ * 🟡 PUT /api/boxes/:id
+ * Met à jour une boîte existante
+ */
+router.put("/:id", async (req, res) => {
+  try {
+    const updatedBox = await Box.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedBox) return res.status(404).json({ error: "Boîte introuvable" });
+    res.json(updatedBox);
+  } catch (err) {
+    console.error("Erreur mise à jour boîte :", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+/**
+ * 🔴 DELETE /api/boxes/:id
+ * Supprime une boîte et la retire de l’entrepôt associé
+ */
+router.delete("/:id", async (req, res) => {
+  try {
+    const box = await Box.findById(req.params.id);
+    if (!box) return res.status(404).json({ error: "Boîte introuvable" });
+
+    await Box.findByIdAndDelete(req.params.id);
+    await updateStorageById(box.storageId.toString(), { $pull: { boxes: box._id } });
+
+    res.json({ message: "Boîte supprimée et retirée de l’entrepôt" });
+  } catch (err) {
+    console.error("Erreur suppression boîte :", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
