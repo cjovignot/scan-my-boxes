@@ -195,7 +195,7 @@ const BoxDetails = () => {
             alignItems: "center",
             justifyContent: "space-between",
           }}
-className="p-3 object-contain transition-transform rounded-lg cursor-pointer scale-80 hover:scale-100"
+className="p-4 mx-auto object-contain transition-transform rounded-lg cursor-pointer scale-80 hover:scale-100"
 onClick={() => setShowModal(true)}
         >
           {box.qrcodeURL && (
