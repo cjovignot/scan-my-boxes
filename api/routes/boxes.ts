@@ -6,7 +6,6 @@ import cloudinary from "cloudinary";
 import { Storage } from "models/Storage";
 import { updateStorageById } from "../controllers/storageController";
 
-// 🔧 Configuration Cloudinary
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
   api_key: process.env.CLOUDINARY_API_KEY!,
@@ -24,27 +23,24 @@ router.get("/", async (req, res) => {
     const { ownerId, storageId } = req.query;
 
     const filter: any = {};
-    if (ownerId) filter.ownerId = ownerId;
-    if (storageId) filter.storageId = storageId;
+
+    if (ownerId) {
+      // ✅ Cast auto vers ObjectId si possible
+      filter.ownerId = Types.ObjectId.isValid(ownerId)
+        ? new Types.ObjectId(ownerId as string)
+        : ownerId;
+    }
+
+    if (storageId) {
+      filter.storageId = Types.ObjectId.isValid(storageId)
+        ? new Types.ObjectId(storageId as string)
+        : storageId;
+    }
 
     const boxes = await Box.find(filter).sort({ createdAt: -1 });
     res.json(boxes);
   } catch (err) {
     console.error("Erreur lors de la récupération des boîtes :", err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
-/**
- * 🟢 GET /api/boxes/:id
- * Récupère une boîte spécifique par ID
- */
-router.get("/:id", async (req, res) => {
-  try {
-    const box = await Box.findById(req.params.id);
-    if (!box) return res.status(404).json({ error: "Boîte introuvable" });
-    res.json(box);
-  } catch (err) {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -63,16 +59,26 @@ router.post("/", async (req, res) => {
         .json({ error: "ownerId et storageId sont requis" });
     }
 
+    // ✅ Cast propre vers ObjectId pour cohérence avec la base
+    const ownerObjectId = Types.ObjectId.isValid(ownerId)
+      ? new Types.ObjectId(ownerId)
+      : ownerId;
+
+    const storageObjectId = Types.ObjectId.isValid(storageId)
+      ? new Types.ObjectId(storageId)
+      : storageId;
 
     // 🔢 Génère un numéro unique basé sur le nombre de boîtes du user
-    const userBoxes = await Box.find({ ownerId }).sort({ createdAt: 1 });
+    const userBoxes = await Box.find({ ownerId: ownerObjectId }).sort({
+      createdAt: 1,
+    });
     const nextNumber = (userBoxes.length + 1).toString().padStart(3, "0");
     const boxNumber = `BOX-${nextNumber}`;
 
     // 🗃️ Création de la nouvelle boîte
     const newBox = new Box({
-      ownerId,
-      storageId,
+      ownerId: ownerObjectId,
+      storageId: storageObjectId,
       number: boxNumber,
       destination: destination || "Inconnu",
       content: content || [],
@@ -83,11 +89,11 @@ router.post("/", async (req, res) => {
       },
     });
 
-    // 💾 Enregistre la boîte pour obtenir un _id
+    // 💾 Enregistre la boîte
     const savedBox = await newBox.save();
 
-    // 🔗 Appelle la même logique que PATCH /api/storages/:id pour ajouter la boîte
-    const updatedStorage = await updateStorageById(storageId, {
+    // 🔗 Ajoute la boîte à l'entrepôt correspondant
+    const updatedStorage = await updateStorageById(storageObjectId.toString(), {
       $addToSet: { boxes: savedBox._id },
     });
 
@@ -115,54 +121,6 @@ router.post("/", async (req, res) => {
     res.status(201).json(savedBox);
   } catch (err) {
     console.error("Erreur création boîte :", err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
-/**
- * 🟡 PUT /api/boxes/:id
- * Met à jour une boîte existante
- */
-router.put("/:id", async (req, res) => {
-  try {
-    const updatedBox = await Box.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!updatedBox)
-      return res.status(404).json({ error: "Boîte introuvable" });
-    res.json(updatedBox);
-  } catch (err) {
-    console.error("Erreur mise à jour boîte :", err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
-/**
- * 🔴 DELETE /api/boxes/:id
- * Supprime une boîte et la retire de l’entrepôt associé
- */
-router.delete("/:id", async (req, res) => {
-  try {
-    const box = await Box.findById(req.params.id);
-    if (!box) {
-      return res.status(404).json({ error: "Boîte introuvable" });
-    }
-
-    // 🗑️ Supprime la boîte
-    await Box.findByIdAndDelete(req.params.id);
-
-    // 🔗 Retire la boîte du tableau "boxes" de l’entrepôt associé
-    const updatedStorage = await updateStorageById(box.storageId.toString(), {
-      $pull: { boxes: box._id },
-    });
-
-    if (!updatedStorage) {
-      console.warn("⚠️ Entrepôt introuvable pour suppression de boîte");
-    }
-
-    res.json({ message: "✅ Boîte supprimée et retirée de l’entrepôt" });
-  } catch (err) {
-    console.error("Erreur suppression boîte :", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
