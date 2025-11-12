@@ -63,12 +63,6 @@ router.post("/", async (req, res) => {
         .json({ error: "ownerId et storageId sont requis" });
     }
 
-    if (
-      !Types.ObjectId.isValid(ownerId) ||
-      !Types.ObjectId.isValid(storageId)
-    ) {
-      return res.status(400).json({ error: "ownerId ou storageId invalide" });
-    }
 
     // 🔢 Génère un numéro unique basé sur le nombre de boîtes du user
     const userBoxes = await Box.find({ ownerId }).sort({ createdAt: 1 });

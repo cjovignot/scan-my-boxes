@@ -1,14 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
-import {
-  ArrowLeft,
-  Save,
-  Plus,
-  Trash,
-  Camera,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, Save, Plus, Camera, ChevronDown } from "lucide-react";
 import { useApi } from "../hooks/useApi";
 import { useApiMutation } from "../hooks/useApiMutation";
 
@@ -56,6 +49,7 @@ const BoxCreate = () => {
     width: "",
     height: "",
     depth: "",
+    fragile: false,
   });
 
   const [contentItems, setContentItems] = useState<
@@ -337,6 +331,21 @@ const BoxCreate = () => {
               onChange={handleChange}
               className="w-1/3 px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:ring-1 focus:ring-yellow-400"
             />
+          </div>
+
+          {/* --- Option Fragile --- */}
+          <div className="flex items-center gap-2 mt-4">
+            <input
+              type="checkbox"
+              id="fragile"
+              name="fragile"
+              checked={form.fragile}
+              onChange={(e) => setForm({ ...form, fragile: e.target.checked })}
+              className="w-5 h-5 accent-yellow-400"
+            />
+            <label htmlFor="fragile" className="text-sm text-gray-300">
+              Boîte fragile
+            </label>
           </div>
 
           <button

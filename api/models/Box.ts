@@ -10,6 +10,7 @@ export interface IBox extends Document {
   ownerId: string;
   storageId: string;
   number: string;
+  fragile: boolean;
   content: IContentItem[];
   destination: string;
   qrcodeURL?: string;
@@ -36,6 +37,7 @@ const boxSchema = new Schema<IBox>(
     ownerId: { type: String, required: true, index: true },
     storageId: { type: String, required: true },
     number: { type: String, required: true },
+    fragile: { type: Boolean, required: false },
     content: { type: [contentItemSchema], default: [] },
     destination: { type: String, default: "Inconnu" },
     qrcodeURL: { type: String },

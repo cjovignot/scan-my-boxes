@@ -73,7 +73,7 @@ const Boxes = () => {
     };
 
     if (user?._id) fetchBoxes();
-  }, [API_URL, user]);
+  }, [API_URL, user?._id]);
 
   // =====================================
   // 🔹 Fetch des entrepôts (pour afficher leur nom)
@@ -92,7 +92,7 @@ const Boxes = () => {
     };
 
     if (user?._id) fetchStorages();
-  }, [API_URL, user]);
+  }, [API_URL, user?._id]);
 
   // =====================================
   // 🔹 Suppression d’une boîte
