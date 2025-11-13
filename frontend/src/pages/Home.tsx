@@ -1,6 +1,5 @@
 import PageWrapper from "../components/PageWrapper";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import {
   Warehouse,
   Boxes,
@@ -8,7 +7,11 @@ import {
   Tag,
   Clock,
   PackageSearch,
+  Plus,
 } from "lucide-react";
+import { useApi } from "../hooks/useApi";
+import { useApiMutation } from "../hooks/useApiMutation";
+import { useNavigate } from "react-router-dom";
 
 type Box = {
   _id: string;
@@ -18,83 +21,73 @@ type Box = {
   content: string[];
   destination: string;
   qrcodeURL: string;
-  dimensions: {
-    width: number;
-    height: number;
-    depth: number;
-  };
+  dimensions: { width: number; height: number; depth: number };
 };
 
-// 🔹 Simulation de données (sera remplacé par le back plus tard)
-const mockBoxes: Box[] = [
-  {
-    _id: "box1",
-    ownerId: "user123",
-    storageId: "storageA",
-    number: "001",
-    content: ["T-shirt", "Chaussures", "Livre"],
-    destination: "Chambre",
-    qrcodeURL:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box1",
-    dimensions: { width: 40, height: 30, depth: 20 },
-  },
-  {
-    _id: "box2",
-    ownerId: "user123",
-    storageId: "storageB",
-    number: "002",
-    content: ["Vase", "Plaid", "Bougie", "Cadre"],
-    destination: "Salon",
-    qrcodeURL:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box2",
-    dimensions: { width: 50, height: 25, depth: 25 },
-  },
-  {
-    _id: "box3",
-    ownerId: "user123",
-    storageId: "storageC",
-    number: "003",
-    content: ["Chaise", "Tablette", "Lampe", "Coussin", "Tapis"],
-    destination: "Salon",
-    qrcodeURL:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=box3",
-    dimensions: { width: 60, height: 40, depth: 30 },
-  },
-];
+type Storage = {
+  _id: string;
+  ownerId: string;
+  name: string;
+  address?: string;
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  // 🔸 Calculs de base
-  const totalWarehouses = new Set(mockBoxes.map((b) => b.storageId)).size;
-  const totalBoxes = mockBoxes.length;
-  const totalVolumeCm3 = mockBoxes.reduce(
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // =============================
+  // 🔹 Fetch API Data
+  // =============================
+
+  const {
+    data: storagesRaw,
+    loading: loadingStorages,
+    error: errorStorages,
+  } = useApi<Storage[]>(`/api/storages?ownerId=${user?._id}`, {
+    skip: !user?._id,
+  });
+
+  const storages = storagesRaw ?? [];
+
+  const {
+    data: boxesRaw,
+    loading: loadingBoxes,
+    error: errorBoxes,
+    refetch: refetchBoxes,
+  } = useApi<Box[]>(`/api/boxes?ownerId=${user?._id}`, { skip: !user?._id });
+
+  const boxes = boxesRaw ?? [];
+
+  // =============================
+  // 🧮 Calculs des KPI
+  // =============================
+
+  const totalWarehouses = storages.length;
+  const totalBoxes = boxes.length;
+  const totalVolumeCm3 = boxes.reduce(
     (sum, b) =>
       sum + b.dimensions.width * b.dimensions.height * b.dimensions.depth,
     0
   );
   const totalVolumeM3 = totalVolumeCm3 / 1_000_000;
-
-  // 🔹 Nouveaux KPI
-  const totalObjects = mockBoxes.reduce((sum, b) => sum + b.content.length, 0);
+  const totalObjects = boxes.reduce((sum, b) => sum + b.content.length, 0);
   const avgBoxesPerWarehouse =
     totalWarehouses > 0 ? totalBoxes / totalWarehouses : 0;
   const avgVolumePerBox = totalBoxes > 0 ? totalVolumeM3 / totalBoxes : 0;
 
-  // Trouver la destination la plus fréquente
   const destinationCount: Record<string, number> = {};
-  mockBoxes.forEach((b) => {
+  boxes.forEach((b) => {
     destinationCount[b.destination] =
       (destinationCount[b.destination] || 0) + 1;
   });
+
   const topDestination =
     Object.keys(destinationCount).length > 0
       ? Object.entries(destinationCount).sort((a, b) => b[1] - a[1])[0][0]
       : "N/A";
 
-  // Dernière boîte ajoutée (simulation)
-  const lastBoxAdded = mockBoxes[mockBoxes.length - 1];
+  const lastBoxAdded = boxes[boxes.length - 1];
 
-  // 🔹 Configuration des cartes (facile à étendre)
   const stats = [
     {
       id: "warehouses",
@@ -148,11 +141,27 @@ const Dashboard = () => {
     {
       id: "lastAdded",
       label: "Récente",
-      value: `#${lastBoxAdded.number} (${lastBoxAdded.destination})`,
+      value: lastBoxAdded
+        ? `#${lastBoxAdded.number} (${lastBoxAdded.destination})`
+        : "Aucune",
       description: "Dernière boîte ajoutée",
       icon: Clock,
     },
   ];
+
+  // =============================
+  // 🎨 Rendering
+  // =============================
+
+  if (loadingStorages || loadingBoxes)
+    return <p className="text-center text-gray-400">Chargement...</p>;
+
+  if (errorStorages || errorBoxes)
+    return (
+      <p className="text-center text-red-400">
+        Erreur : {errorStorages || errorBoxes}
+      </p>
+    );
 
   return (
     <PageWrapper>
@@ -161,14 +170,13 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md mb-6"
+          className="flex items-center justify-between w-full max-w-4xl mb-6"
         >
-          <h1 className="mt-4 text-3xl font-semibold text-yellow-400">
+          <h1 className="flex justify-center w-full py-6 text-3xl font-semibold text-yellow-400">
             Tableau de bord
           </h1>
         </motion.div>
 
-        {/* Section des cartes de stats */}
         <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {stats.map(({ id, label, value, description, icon: Icon }) => (
             <div
@@ -187,7 +195,6 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Footer */}
         <p className="mt-10 text-sm text-center text-gray-500">
           Aperçu global de votre activité.
         </p>
