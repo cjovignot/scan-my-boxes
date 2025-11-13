@@ -2,7 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import { motion } from "framer-motion";
-import { Pencil, Trash, Plus, ArrowUpDown, ChevronDown } from "lucide-react";
+import {
+  Trash,
+  Plus,
+  ArrowUpDown,
+  ArrowDownUp,
+  ChevronDown,
+  AlertTriangle,
+} from "lucide-react";
+import { Boxes as StorageIcon } from "lucide-react";
 
 // =====================================
 // 🔹 Types
@@ -19,6 +27,7 @@ type Box = {
   storageId: string;
   number: string;
   content: ContentItem[];
+  fragile: string;
   destination: string;
   qrcodeURL: string;
   dimensions: {
@@ -44,6 +53,13 @@ const Boxes = () => {
   const [sortMode, setSortMode] = useState<"destination" | "objectCount">(
     "destination"
   );
+  const [filterFragile, setFilterFragile] = useState<
+    "all" | "fragile" | "nonFragile"
+  >("all");
+  const [sortByNumber, setSortByNumber] = useState<"asc" | "desc" | null>(
+    "asc"
+  );
+  const [filterStorage, setFilterStorage] = useState<string>("all");
   const [ascending, setAscending] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -130,7 +146,25 @@ const Boxes = () => {
             item.name.toLowerCase().includes(search.toLowerCase())
           )
     )
+    .filter((box) => {
+      // Filtre fragilité
+      if (filterFragile === "fragile") return box.fragile === true;
+      if (filterFragile === "nonFragile") return box.fragile === false;
+      return true;
+    })
+    .filter((box) => {
+      // Filtre entrepôt
+      return filterStorage === "all" ? true : box.storageId === filterStorage;
+    })
     .sort((a, b) => {
+      // Tri par numéro si défini
+      if (sortByNumber) {
+        return sortByNumber === "asc"
+          ? a.number.localeCompare(b.number)
+          : b.number.localeCompare(a.number);
+      }
+
+      // Sinon tri par le mode principal
       if (sortMode === "destination") {
         return ascending
           ? a.destination.localeCompare(b.destination)
@@ -213,19 +247,48 @@ const Boxes = () => {
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-3 mt-3">
-            <div className="relative flex-3/5">
+          <div className="flex items-center gap-3 mt-3">
+            <div className="relative flex items-center">
+              <StorageIcon
+                size={16}
+                className="absolute text-yellow-400 left-3"
+              />
               <select
-                value={sortMode}
-                onChange={(e) =>
-                  setSortMode(e.target.value as "destination" | "objectCount")
-                }
-                className="w-full px-3 py-2 pr-10 text-sm text-white transition-colors bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
+                value={filterStorage}
+                onChange={(e) => setFilterStorage(e.target.value)}
+                className="w-full py-2 pl-8 pr-10 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
               >
-                <option value="destination">Destination alphabétique</option>
-                <option value="objectCount">Nombre d’objets</option>
+                <option value="all">Tous</option>
+                {safeStorages.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
+              <ChevronDown
+                size={16}
+                className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-1/2"
+              />
+            </div>
 
+            <div className="relative flex items-center">
+              <AlertTriangle
+                size={16}
+                className="absolute text-red-400 left-3"
+              />
+              <select
+                value={filterFragile}
+                onChange={(e) =>
+                  setFilterFragile(
+                    e.target.value as "all" | "fragile" | "nonFragile"
+                  )
+                }
+                className="w-full py-2 pl-8 pr-10 text-sm text-white bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
+              >
+                <option value="all">Tous</option>
+                <option value="fragile">Fragile</option>
+                <option value="nonFragile">Non fragile</option>
+              </select>
               <ChevronDown
                 size={16}
                 className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-1/2"
@@ -233,11 +296,16 @@ const Boxes = () => {
             </div>
 
             <button
-              onClick={() => setAscending(!ascending)}
+              onClick={() =>
+                setSortByNumber((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
               className="flex items-center justify-center gap-2 px-3 py-2 text-sm transition-colors bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-400"
             >
-              <ArrowUpDown size={16} />
-              {ascending ? "Croissant" : "Décroissant"}
+              {sortByNumber === "asc" ? (
+                <ArrowUpDown size={16} />
+              ) : (
+                <ArrowDownUp size={16} />
+              )}
             </button>
           </div>
         </div>
@@ -266,15 +334,6 @@ const Boxes = () => {
                     </h2>
 
                     <div className="flex items-center gap-3">
-                      {/* <button
-                        className="p-2 transition-colors rounded hover:bg-gray-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/boxes/edit/${box._id}`);
-                        }}
-                      >
-                        <Pencil size={18} />
-                      </button> */}
                       <button
                         className="p-2 transition-colors rounded hover:bg-red-700"
                         onClick={(e) => {

@@ -2,7 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import { motion } from "framer-motion";
-import { Pencil, Trash, Plus, ArrowUpDown, ChevronDown } from "lucide-react";
+import {
+  Pencil,
+  Trash,
+  Plus,
+  ArrowUpDown,
+  ArrowDownUp,
+  ChevronDown,
+} from "lucide-react";
 import { useApi } from "../hooks/useApi";
 
 type Storage = {
@@ -144,7 +151,7 @@ const Storages = () => {
                 }
                 className="w-full px-3 py-2 pr-10 text-sm text-white transition-colors bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
               >
-                <option value="name">Nom alphabétique</option>
+                <option value="name">Nom de l'entrepôt</option>
                 <option value="boxCount">Nombre de boîtes</option>
               </select>
 
@@ -158,8 +165,11 @@ const Storages = () => {
               onClick={() => setAscending(!ascending)}
               className="flex items-center justify-center gap-2 px-3 py-2 text-sm transition-colors bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-400"
             >
-              <ArrowUpDown size={16} />
-              {ascending ? "Croissant" : "Décroissant"}
+              {ascending ? (
+                <ArrowUpDown size={16} />
+              ) : (
+                <ArrowDownUp size={16} />
+              )}
             </button>
           </div>
         </div>
