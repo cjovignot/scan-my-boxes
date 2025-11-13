@@ -102,18 +102,6 @@ const Profile = () => {
               Se déconnecter
             </motion.button>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleDeleteAccount}
-              disabled={deleting}
-              className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-400 border border-red-600 rounded-full hover:bg-red-600/20 disabled:opacity-50"
-            >
-              <Trash2 size={16} />
-              Supprimer mon compte
-            </motion.button>
-          </div>
-        </motion.div>
-
         {/* Tableau de bord */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
