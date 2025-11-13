@@ -51,7 +51,7 @@ const UserAccount = () => {
         {/* 🧭 Bouton retour */}
         <button
           onClick={() => navigate(-1)}
-          className="self-start flex items-center gap-2 mb-6 text-sm text-gray-400 hover:text-yellow-400"
+          className="flex items-center self-start gap-2 mb-6 text-sm text-gray-400 hover:text-yellow-400"
         >
           <ArrowLeft size={16} />
           Retour

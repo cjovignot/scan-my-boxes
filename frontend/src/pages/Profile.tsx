@@ -1,23 +1,21 @@
 import { useEffect } from "react";
 import PageWrapper from "../components/PageWrapper";
-import axiosClient from "../api/axiosClient";
 import { motion } from "framer-motion";
 import { LogOut, Trash2, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
+import { useApiMutation } from "../hooks/useApiMutation";
 
 interface DashboardLink {
   label: string;
   path: string;
-  role?: "admin"; // 👈 seuls ceux avec role: "admin" seront restreints
+  role?: "admin";
 }
 
 const dashboardLinks: DashboardLink[] = [
   { label: "👥 Utilisateurs", path: "/admin/users", role: "admin" },
   { label: "👤 Mon compte", path: "/userAccount" },
-  // { label: "📦 Entrepôts", path: "/admin/storages", role: "admin" },
-  // { label: "📊 Statistiques", path: "/admin/stats", role: "admin" },
-  { label: "⚙️ Paramètres", path: "/settings" }, // 👈 accessible à tous
+  { label: "⚙️ Paramètres", path: "/settings" },
 ];
 
 const Profile = () => {
@@ -28,32 +26,35 @@ const Profile = () => {
     if (!user) navigate("/login");
   }, [user, navigate]);
 
+  // 🔹 Mutation suppression compte
+  const { mutate: deleteAccount, loading: deleting } = useApiMutation<
+    { success: boolean },
+    void
+  >(`/api/user/${user?._id}`, "DELETE", {
+    onSuccess: () => {
+      logout();
+      alert("Compte supprimé avec succès.");
+      navigate("/register");
+    },
+    onError: (err) => {
+      console.error("Erreur suppression compte :", err);
+      alert("Erreur lors de la suppression du compte.");
+    },
+  });
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!user?._id) return alert("Utilisateur introuvable.");
-    const confirmDelete = window.confirm(
-      "❌ Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible."
-    );
-    if (!confirmDelete) return;
-
-    try {
-      await axiosClient.delete(`/api/user/${user._id}`);
-      logout();
-      alert("Compte supprimé avec succès.");
-      navigate("/register");
-    } catch (error: any) {
-      console.error("Erreur suppression :", error);
-      alert("Erreur lors de la suppression du compte.");
-    }
+    if (!confirm("❌ Es-tu sûr de vouloir supprimer ton compte ?")) return;
+    deleteAccount();
   };
 
   if (!user) return null;
 
-  // 🧩 Filtrage : admin voit tout, sinon que les liens sans restriction
   const visibleLinks = dashboardLinks.filter(
     (link) => !link.role || link.role === user.role
   );
@@ -61,7 +62,7 @@ const Profile = () => {
   return (
     <PageWrapper>
       <div className="flex flex-col items-center px-6 py-10 text-white">
-        {/* 📄 Carte Profil */}
+        {/* Carte Profil */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -91,7 +92,6 @@ const Profile = () => {
             Compte créé via {user.provider || "inscription classique"}
           </p>
 
-          {/* Actions principales */}
           <div className="flex flex-col gap-3 mt-8">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -105,7 +105,8 @@ const Profile = () => {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleDeleteAccount}
-              className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-400 border border-red-600 rounded-full hover:bg-red-600/20"
+              disabled={deleting}
+              className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-400 border border-red-600 rounded-full hover:bg-red-600/20 disabled:opacity-50"
             >
               <Trash2 size={16} />
               Supprimer mon compte
@@ -113,7 +114,7 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Section Tableau de bord (visible pour tous) */}
+        {/* Tableau de bord */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

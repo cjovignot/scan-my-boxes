@@ -20,19 +20,6 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
     setIsPWA(isStandalone);
 
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    // const API_URL = import.meta.env.VITE_API_URL;
-
-    // const redirectUrl = `${API_URL}/api/auth/google-redirect?source=pwa`;
-
-    // log(`🔹 GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}`);
-    // log(`🔹 API_URL: ${API_URL}`);
-    // log(`🔹 Mode PWA: ${isStandalone}`);
-    // log(`🔹 URL de redirection: ${redirectUrl}`);
-
-    // if (isStandalone) {
-    //   log("🟡 PWA détectée → bouton personnalisé affiché");
-    //   return;
-    // }
 
     const handleCredentialResponse = (response: any) => {
       if (response?.credential) {
@@ -93,13 +80,6 @@ export const SocialLogin = ({ onLogin }: SocialLoginProps) => {
           </span>
         </button>
       )}
-
-      {/* 🔍 Logs debug */}
-      {/* <div className="w-full max-w-sm p-2 mt-4 text-xs text-gray-400 bg-gray-900 rounded-lg">
-        {logs.map((line, i) => (
-          <div key={i}>{line}</div>
-        ))}
-      </div> */}
     </div>
   );
 };

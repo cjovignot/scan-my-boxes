@@ -1,17 +1,25 @@
-import { useState } from "react";
 import UserForm from "../components/UserForm";
 import { SocialLogin } from "../components/SocialLogin";
 import { useNavigate } from "react-router-dom";
 import { useApiMutation } from "../hooks/useApiMutation";
 import { useAuth } from "../contexts/AuthContext";
 
+interface GoogleLoginResponse {
+  user: any; // adapte ce type selon ton User réel
+}
+
+interface GoogleLoginPayload {
+  token: string;
+}
+
 const Login = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const { mutate: loginWithGoogle } = useApiMutation<
-    { user: any },
-    { token: string }
+  // 🔹 Mutation Google Login
+  const { mutate: loginWithGoogle, loading } = useApiMutation<
+    GoogleLoginResponse,
+    GoogleLoginPayload
   >(`${import.meta.env.VITE_API_URL}/api/auth/google-login`, "POST", {
     onSuccess: (data) => {
       if (!data?.user) return alert("Utilisateur non trouvé");
@@ -24,17 +32,16 @@ const Login = () => {
     },
   });
 
-  const handleGoogleLogin = ({ token }: { token: string }) => {
-    loginWithGoogle({ token });
+  const handleGoogleLogin = (payload: GoogleLoginPayload) => {
+    loginWithGoogle(payload);
   };
 
   return (
     <div className="flex flex-col items-center px-6 py-10 text-white">
-
       {/* 🔹 Formulaire utilisateur */}
-        <div className="w-full max-w-sm mt-4 animate-fadeIn">
-          <UserForm />
-        </div>
+      <div className="w-full max-w-sm mt-4 animate-fadeIn">
+        <UserForm />
+      </div>
 
       {/* 🔸 Séparateur stylé */}
       <div className="relative w-full max-w-sm my-8">
@@ -48,7 +55,7 @@ const Login = () => {
 
       {/* 🔹 Connexion Google */}
       <div className="mt-2">
-        <SocialLogin onLogin={handleGoogleLogin} />
+        <SocialLogin onLogin={handleGoogleLogin} disabled={loading} />
       </div>
     </div>
   );

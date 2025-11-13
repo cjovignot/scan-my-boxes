@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Printer, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
-import { useApi } from "../../hooks/useApi";
+import { useApi } from "../../hooks/useApi"; // ✅ déjà importé
 import * as htmlToImage from "html-to-image";
 
 interface ContentItem {
@@ -42,21 +42,23 @@ const BoxDetails = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
+  // ✅ utilisation corrigée de useApi avec `skip`
   const {
     data: box,
     loading,
     error,
     refetch,
-  } = useApi<Box>(id ? `/api/boxes/${id}` : undefined);
+  } = useApi<Box>(`/api/boxes/${id}`, { skip: !id }); // ✅ plus besoin du "id ? ... : undefined"
 
   const [storageName, setStorageName] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
+  // ✅ refetch automatique quand l'id change
   useEffect(() => {
     if (id) refetch();
-  }, [id]);
+  }, [id, refetch]);
 
   // Récupère le nom de l'entrepôt
   useEffect(() => {
@@ -189,7 +191,6 @@ const BoxDetails = () => {
             style={{
               width: "10cm",
               height: "4cm",
-              // padding: "0.5cm",
               background: "#fff",
               color: "#000",
               fontFamily: "Arial, sans-serif",
@@ -216,12 +217,10 @@ const BoxDetails = () => {
               </p>
               <span className="flex items-center justify-end gap-1 pr-3 font-bold text-red-400">
                 {box.fragile && (
-                  <>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 text-sm font-semibold text-red-700 bg-red-100 border border-red-300 rounded-full shadow-sm">
-                      <AlertTriangle className="w-4 h-4 text-red-500" />
-                      <span>Fragile</span>
-                    </div>
-                  </>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 text-sm font-semibold text-red-700 bg-red-100 border border-red-300 rounded-full shadow-sm">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <span>Fragile</span>
+                  </div>
                 )}
               </span>
             </div>
@@ -231,6 +230,7 @@ const BoxDetails = () => {
         <p className="flex justify-center mt-2 text-xs text-gray-500">
           Cliquez pour imprimer le QR code
         </p>
+
         {/* Informations de la boîte */}
         <div className="relative w-full p-4 mx-auto mt-4 bg-gray-900 border border-gray-800 rounded-2xl">
           <p className="mb-3 text-sm text-gray-300">

@@ -12,11 +12,11 @@ type Storage = {
 
 const BoxCreate = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   // ============================
-  // 🔹 Récupération des entrepôts via useApi
+  // 🔹 Récupération des entrepôts
   // ============================
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const {
     data: storages,
     loading: loadingStorages,
@@ -172,7 +172,7 @@ const BoxCreate = () => {
             placeholder="Destination (ex: Salon)"
             value={form.destination}
             onChange={handleChange}
-            className="w-full px-3 py-2 pr-10 text-sm text-white transition-colors border border-gray-700 rounded-lg appearance-none bg-gray-950 focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
+            className="w-full px-3 py-2 text-sm text-white transition-colors border border-gray-700 rounded-lg bg-gray-950 focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
           />
 
           <div className="relative flex-3/5">
@@ -298,7 +298,6 @@ const BoxCreate = () => {
                   onClick={() => handleRemoveItem(index)}
                   className="flex-shrink-0 p-2 text-sm text-white bg-red-900 rounded-lg hover:text-red-400"
                 >
-                  {/* <Trash size={18} /> */}
                   Supprimer
                 </button>
               </div>

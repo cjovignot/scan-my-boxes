@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import { motion } from "framer-motion";
 import { Pencil, Trash, Plus, ArrowUpDown, ChevronDown } from "lucide-react";
+import { useApi } from "../hooks/useApi";
 
 type Storage = {
   _id: string;
@@ -14,39 +15,28 @@ type Storage = {
 
 const Storages = () => {
   const navigate = useNavigate();
-  const [storages, setStorages] = useState<Storage[]>([]);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<"name" | "boxCount">("name");
   const [ascending, setAscending] = useState(true);
   const [scrolled, setScrolled] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const headerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL; // ✅ récupère depuis .env
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // --- Récupération des entrepôts depuis le backend ---
-  useEffect(() => {
-    const fetchStorages = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/storages?ownerId=${user._id}`);
-        if (!res.ok) throw new Error("Erreur réseau");
-        const data = await res.json();
-        setStorages(data);
-      } catch (err) {
-        console.error("Erreur lors du chargement des entrepôts :", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?._id) fetchStorages();
-  }, [API_URL, user?._id]);
+  // 🔹 Hook custom pour récupérer les entrepôts
+  const {
+    data: storages = [],
+    loading,
+    error,
+    refetch,
+  } = useApi<Storage[]>(
+    user?._id ? `/api/storages?ownerId=${user._id}` : undefined
+  );
 
   // --- Filtrage & tri ---
-  const filtered = storages
+  const filtered = (storages ?? [])
     .filter((s) => s.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sortMode === "name") {
@@ -55,8 +45,8 @@ const Storages = () => {
           : b.name.localeCompare(a.name);
       }
       return ascending
-        ? a.boxes.length - b.boxes.length
-        : b.boxes.length - a.boxes.length;
+        ? (a.boxes?.length ?? 0) - (b.boxes?.length ?? 0)
+        : (b.boxes?.length ?? 0) - (a.boxes?.length ?? 0);
     });
 
   // --- Ajustement du padding ---
@@ -69,7 +59,7 @@ const Storages = () => {
 
   useEffect(() => {
     updateContentOffset();
-    const ro = new ResizeObserver(() => updateContentOffset());
+    const ro = new ResizeObserver(updateContentOffset);
     if (headerRef.current) ro.observe(headerRef.current);
     window.addEventListener("resize", updateContentOffset);
     const onScroll = () => setScrolled(window.scrollY > 6);
@@ -84,22 +74,21 @@ const Storages = () => {
   // --- Suppression d’un entrepôt ---
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("🗑️ Supprimer cet entrepôt ?");
-
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/storages/${id}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/storages/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Erreur lors de la suppression");
+        throw new Error(errorData?.error || "Erreur lors de la suppression");
       }
-
-      // ✅ Met à jour la liste sans recharger la page
-      setStorages((prev) => prev.filter((s) => s._id !== id));
-
+      // 🔹 Mise à jour locale
+      refetch?.();
       alert("✅ Entrepôt supprimé avec succès !");
     } catch (err) {
       console.error("Erreur lors de la suppression :", err);
@@ -129,6 +118,7 @@ const Storages = () => {
               Mes entrepôts
             </h1>
           </motion.div>
+
           <div className="flex gap-3">
             <input
               type="text"

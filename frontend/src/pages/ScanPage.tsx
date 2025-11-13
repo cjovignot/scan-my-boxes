@@ -3,6 +3,7 @@ import { Scanner } from "@yudiel/react-qr-scanner";
 import { ArrowLeft, ChevronDown, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
+import { useApiMutation } from "../hooks/useApiMutation";
 
 const ScanPage = () => {
   const navigate = useNavigate();
@@ -12,9 +13,9 @@ const ScanPage = () => {
   const [mode, setMode] = useState<"lecture" | "stockage">("lecture");
   const [selectedStorage, setSelectedStorage] = useState("");
   const [scannedBoxes, setScannedBoxes] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // 🔹 Récupération des entrepôts
   const {
     data: storages,
     loading: loadingStorages,
@@ -22,6 +23,22 @@ const ScanPage = () => {
   } = useApi<{ _id: string; name: string }[]>(
     user?._id ? `/api/storages?ownerId=${user._id}` : undefined
   );
+
+  // 🔹 Mutation pour enregistrer les boîtes dans un entrepôt
+  const { mutate: saveBoxes, loading: saving } = useApiMutation<
+    { success: boolean },
+    { storageId: string; boxIds: string[]; userId: string }
+  >("/api/storages/add-boxes", "POST", {
+    onSuccess: () => {
+      alert("✅ Boîtes enregistrées avec succès !");
+      setScannedBoxes([]);
+      setShowModal(false);
+    },
+    onError: (err) => {
+      console.error("Erreur lors de l’enregistrement :", err);
+      alert("❌ Erreur lors de l’enregistrement.");
+    },
+  });
 
   const handleScan = (res: any) => {
     if (!res || res.length === 0) return;
@@ -36,49 +53,22 @@ const ScanPage = () => {
         return;
       }
       navigate(`/box/boxdetails/${boxId}`);
-    } else if (mode === "stockage") {
+    } else {
       setScannedBoxes((prev) =>
         prev.includes(qrValue) ? prev : [...prev, qrValue]
       );
     }
   };
 
-  const handleSave = async () => {
-    if (!selectedStorage) {
-      alert("❌ Sélectionnez un entrepôt avant d’enregistrer.");
-      return;
-    }
-    if (scannedBoxes.length === 0) {
-      alert("❌ Aucune boîte scannée à enregistrer.");
-      return;
-    }
+  const handleSave = () => {
+    if (!selectedStorage) return alert("❌ Sélectionnez un entrepôt.");
+    if (scannedBoxes.length === 0) return alert("❌ Aucune boîte scannée.");
 
-    setSaving(true);
-    try {
-      const res = await fetch("/api/storages/add-boxes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          storageId: selectedStorage,
-          boxIds: scannedBoxes,
-          userId: user._id,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ Boîtes enregistrées avec succès !");
-        setScannedBoxes([]);
-        setShowModal(false);
-      } else {
-        throw new Error(data.message || "Erreur d’enregistrement");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("❌ Erreur lors de l’enregistrement.");
-    } finally {
-      setSaving(false);
-    }
+    saveBoxes({
+      storageId: selectedStorage,
+      boxIds: scannedBoxes,
+      userId: user._id,
+    });
   };
 
   return (
@@ -98,16 +88,11 @@ const ScanPage = () => {
         <div className="w-8" />
       </div>
 
-      {/* Contenu principal */}
+      {/* Scanner */}
       <div className="flex flex-col items-center flex-1 px-4 py-6">
-        {/* Scanner */}
         <div className="relative w-full max-w-md overflow-hidden border border-gray-700 aspect-square rounded-2xl">
-          {/* Toggle */}
           <div className="absolute z-20 flex items-center gap-2 px-2 py-1 -translate-x-1/2 border border-gray-600 rounded-full top-3 left-1/2 bg-black/60 backdrop-blur-sm w-fit">
-            <span className="text-xs text-gray-300 whitespace-nowrap">
-              Mode lecture
-            </span>
-
+            <span className="text-xs text-gray-300">Mode lecture</span>
             <label className="relative inline-flex items-center flex-shrink-0 cursor-pointer">
               <input
                 type="checkbox"
@@ -120,10 +105,7 @@ const ScanPage = () => {
               <div className="w-10 h-5 transition-all duration-300 bg-gray-700 rounded-full peer peer-checked:bg-yellow-400"></div>
               <div className="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-5"></div>
             </label>
-
-            <span className="text-xs text-gray-300 whitespace-nowrap">
-              Mode stockage
-            </span>
+            <span className="text-xs text-gray-300">Mode stockage</span>
           </div>
 
           <Scanner
@@ -168,7 +150,6 @@ const ScanPage = () => {
               />
             </div>
 
-            {/* Bouton pour voir la saisie */}
             <button
               onClick={() => setShowModal(true)}
               disabled={scannedBoxes.length === 0}
@@ -178,21 +159,12 @@ const ScanPage = () => {
             </button>
           </div>
         )}
-
-        {mode === "lecture" && (
-          <p className="mt-4 text-sm text-gray-400">
-            Oriente ton appareil vers un QR code pour afficher la boîte.
-          </p>
-        )}
       </div>
 
-      {/* =============================== */}
-      {/* 🪟 MODAL DE SAISIE */}
-      {/* =============================== */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="flex flex-col w-full max-w-md overflow-hidden bg-gray-950 border border-gray-700 rounded-xl">
-            {/* Header */}
+          <div className="flex flex-col w-full max-w-md overflow-hidden border border-gray-700 bg-gray-950 rounded-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
               <h3 className="text-yellow-400">
                 Boîtes scannées ({scannedBoxes.length})
@@ -205,7 +177,6 @@ const ScanPage = () => {
               </button>
             </div>
 
-            {/* Contenu scrollable */}
             <div className="flex-1 p-3 overflow-y-auto max-h-[60vh]">
               {scannedBoxes.length === 0 ? (
                 <p className="text-sm text-gray-400">
@@ -225,7 +196,6 @@ const ScanPage = () => {
               )}
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-gray-800 bg-gray-900/70">
               <button
                 onClick={handleSave}

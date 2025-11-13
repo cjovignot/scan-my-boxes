@@ -1,4 +1,5 @@
-import { useState } from "react";
+// frontend/src/components/UserInfos.tsx
+import { useState, useMemo } from "react";
 import { useApi } from "../hooks/useApi";
 import { useApiMutation } from "../hooks/useApiMutation";
 import { EditUserModal } from "./EditUserModal";
@@ -12,50 +13,43 @@ interface User {
 }
 
 const UserInfos = () => {
-  const { data, loading, error, refetch } = useApi<User[]>("/api/user");
+  const { data: users, loading, error, refetch } = useApi<User[]>("/api/user");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [search, setSearch] = useState(""); // 🔍 barre de recherche
 
-  const handleEdit = (userId: string) => {
-    setSelectedUserId(userId);
-  };
+  // ✅ Mutation pour la suppression d’un utilisateur
+  const { mutate: deleteUser, loading: deleting } = useApiMutation<
+    { message: string },
+    undefined
+  >("/api/user", "DELETE", {
+    onSuccess: () => refetch(),
+    onError: () => alert("❌ Erreur lors de la suppression."),
+  });
 
-  const closeModal = () => {
-    setSelectedUserId(null);
-  };
-
-  // ✅ Mutation suppression
-  const { mutate: deleteUser } = useApiMutation<{ message: string }, undefined>(
-    "/api/user",
-    "DELETE",
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: () => {
-        alert("Erreur lors de la suppression.");
-      },
-    }
-  );
+  const handleEdit = (userId: string) => setSelectedUserId(userId);
+  const closeModal = () => setSelectedUserId(null);
 
   const handleDelete = async (id: string) => {
-    const ok = confirm("⚠️ Es-tu sûr de vouloir supprimer cet utilisateur ?");
-    if (!ok) return;
+    if (!confirm("⚠️ Es-tu sûr de vouloir supprimer cet utilisateur ?")) return;
 
-    await deleteUser(undefined, {
-      url: `/api/user/${id}`,
-    });
-
-    refetch();
+    try {
+      await deleteUser(undefined, { url: `/api/user/${id}` });
+    } catch (err) {
+      console.error("Erreur suppression utilisateur :", err);
+    }
   };
 
-  // ✅ Filtrage par email (et éventuellement nom)
-  const filteredUsers =
-    data?.filter(
-      (user) =>
-        user.email.toLowerCase().includes(search.toLowerCase()) ||
-        user.name.toLowerCase().includes(search.toLowerCase())
-    ) ?? [];
+  // ✅ Filtrage performant avec useMemo
+  const filteredUsers = useMemo(() => {
+    const term = search.toLowerCase();
+    return (
+      users?.filter(
+        (u) =>
+          u.email.toLowerCase().includes(term) ||
+          u.name.toLowerCase().includes(term)
+      ) ?? []
+    );
+  }, [users, search]);
 
   return (
     <div className="w-full max-w-md p-4 border border-gray-800 shadow-lg bg-gray-950 rounded-2xl">
@@ -75,7 +69,7 @@ const UserInfos = () => {
       {loading && <p className="text-center text-gray-400">⏳ Chargement...</p>}
       {error && <p className="text-center text-red-400">❌ {error}</p>}
 
-      {filteredUsers.length === 0 && !loading && (
+      {!loading && filteredUsers.length === 0 && (
         <p className="text-center text-gray-500">Aucun utilisateur trouvé.</p>
       )}
 
@@ -91,7 +85,8 @@ const UserInfos = () => {
                 <p className="text-sm text-gray-400 truncate">{user.email}</p>
                 {user.createdAt && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Créé le {new Date(user.createdAt).toLocaleDateString()}
+                    Créé le{" "}
+                    {new Date(user.createdAt).toLocaleDateString("fr-FR")}
                   </p>
                 )}
               </div>
@@ -106,9 +101,14 @@ const UserInfos = () => {
 
                 <button
                   onClick={() => handleDelete(user._id)}
-                  className="px-3 py-1 text-sm text-white bg-red-600 rounded hover:bg-red-500"
+                  disabled={deleting}
+                  className={`px-3 py-1 text-sm text-white rounded ${
+                    deleting
+                      ? "bg-red-800 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-500"
+                  }`}
                 >
-                  Supprimer
+                  {deleting ? "Suppression..." : "Supprimer"}
                 </button>
               </div>
             </li>

@@ -3,7 +3,6 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import MobileLayout from "./layouts/MobileLayout";
 import Home from "./pages/Home";
-import Examples from "./pages/Examples";
 import Profile from "./pages/Profile";
 import UserAccount from "./pages/UserAccount";
 import Register from "./pages/Register";
@@ -59,7 +58,6 @@ function App() {
         <Routes location={location} key={location.pathname}>
           <Route element={<MobileLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/examples" element={<Examples />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/useraccount" element={<UserAccount />} />
             <Route path="/register" element={<Register />} />

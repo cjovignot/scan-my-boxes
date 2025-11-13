@@ -43,13 +43,13 @@ export const EditUserModal = ({
   });
   const [toast, setToast] = useState<string | null>(null);
 
-  // ✅ Charger automatiquement l’utilisateur
+  // ✅ Charger automatiquement l’utilisateur via useApi
   const { data: user } = useApi<{
     _id: string;
     name: string;
     email: string;
     role: string;
-  }>(userId ? `/api/user/${userId}` : "", { skip: !userId });
+  }>(`/api/user/${userId}`, { skip: !userId }); // ✅ utilisation directe de skip
 
   useEffect(() => {
     if (user) {
@@ -62,18 +62,22 @@ export const EditUserModal = ({
     }
   }, [user]);
 
-  // ✅ Mutation mise à jour
+  // ✅ Mutation mise à jour avec useApiMutation
   const { mutate, loading, error } = useApiMutation<
     { message: string },
     Partial<typeof formData>
-  >(userId ? `/api/user/${userId}` : "", "PATCH", {
+  >(`/api/user/${userId}`, "PATCH", {
     onSuccess: (data) => {
-      setToast(data.message);
-      if (onSuccess) onSuccess();
+      setToast(data.message || "Utilisateur mis à jour !");
+      onSuccess?.();
       onClose();
     },
     onError: (err: any) => {
-      setToast(err.response?.data?.error || "Erreur réseau");
+      const msg =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Erreur lors de la mise à jour";
+      setToast(msg);
     },
   });
 
@@ -85,10 +89,15 @@ export const EditUserModal = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return setToast("ID utilisateur manquant");
-    mutate(formData);
+
+    try {
+      await mutate(formData); // ✅ appel du hook mutation
+    } catch {
+      /* l'erreur est déjà gérée via onError */
+    }
   };
 
   return (

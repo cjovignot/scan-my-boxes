@@ -38,8 +38,8 @@ type Storage = {
 // =====================================
 const Boxes = () => {
   const navigate = useNavigate();
-  const [boxes, setBoxes] = useState<Box[]>([]);
-  const [storages, setStorages] = useState<Storage[]>([]);
+  const [boxes, setBoxes] = useState<Box[] | null>(null);
+  const [storages, setStorages] = useState<Storage[] | null>(null);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<"destination" | "objectCount">(
     "destination"
@@ -67,16 +67,18 @@ const Boxes = () => {
         setBoxes(data);
       } catch (err) {
         console.error(err);
+        setBoxes([]);
       } finally {
         setLoading(false);
       }
     };
 
     if (user?._id) fetchBoxes();
+    else setBoxes([]);
   }, [API_URL, user?._id]);
 
   // =====================================
-  // 🔹 Fetch des entrepôts (pour afficher leur nom)
+  // 🔹 Fetch des entrepôts
   // =====================================
   useEffect(() => {
     const fetchStorages = async () => {
@@ -88,10 +90,12 @@ const Boxes = () => {
         setStorages(data);
       } catch (err) {
         console.error(err);
+        setStorages([]);
       }
     };
 
     if (user?._id) fetchStorages();
+    else setStorages([]);
   }, [API_URL, user?._id]);
 
   // =====================================
@@ -105,7 +109,7 @@ const Boxes = () => {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Erreur lors de la suppression");
-      setBoxes((prev) => prev.filter((box) => box._id !== id));
+      setBoxes((prev) => (prev ? prev.filter((box) => box._id !== id) : []));
     } catch (err) {
       console.error("❌ Erreur suppression boîte :", err);
       alert("Impossible de supprimer la boîte.");
@@ -115,10 +119,13 @@ const Boxes = () => {
   // =====================================
   // 🔹 Filtrage + tri
   // =====================================
-  const filteredBoxes = boxes
+  const safeBoxes = Array.isArray(boxes) ? boxes : [];
+  const safeStorages = Array.isArray(storages) ? storages : [];
+
+  const filteredBoxes = safeBoxes
     .filter((box) =>
       search === ""
-        ? true // si rien à chercher, on garde toutes les boîtes
+        ? true
         : box.content.some((item) =>
             item.name.toLowerCase().includes(search.toLowerCase())
           )
@@ -163,7 +170,7 @@ const Boxes = () => {
   // 🔹 Helper : retrouver le nom d’un entrepôt
   // =====================================
   const getStorageName = (id: string) =>
-    storages.find((s) => s._id === id)?.name || "Inconnu";
+    safeStorages.find((s) => s._id === id)?.name || "Inconnu";
 
   // =====================================
   // 🔹 Rendu
@@ -251,7 +258,7 @@ const Boxes = () => {
                 <div
                   key={box._id}
                   className="relative flex flex-col p-4 transition-colors bg-gray-800 border border-gray-700 cursor-pointer rounded-xl hover:bg-gray-700"
-                  onClick={() => navigate(`/box/boxdetails/${box._id}`)} // ← navigation vers BoxDetails
+                  onClick={() => navigate(`/box/boxdetails/${box._id}`)}
                 >
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-yellow-400">
@@ -261,10 +268,10 @@ const Boxes = () => {
                     <div className="flex items-center gap-3">
                       <button
                         className="p-2 transition-colors rounded hover:bg-gray-700"
-                        // onClick={(e) => {
-                        //   e.stopPropagation();
-                        //   navigate(`/boxes/edit/${box._id}`);
-                        // }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/boxes/edit/${box._id}`);
+                        }}
                       >
                         <Pencil size={18} />
                       </button>
@@ -309,13 +316,12 @@ const Boxes = () => {
                     </span>
                   </p>
 
-                  {/* ✅ QR code affiché en bas à droite */}
                   {box.qrcodeURL && (
                     <img
                       src={box.qrcodeURL}
                       alt="QR Code"
                       className="absolute object-contain w-16 h-16 p-1 transition-opacity border border-gray-600 rounded-md bottom-2 right-2 opacity-80 hover:opacity-100 bg-gray-900/40"
-                      onClick={(e) => e.stopPropagation()} // évite d’ouvrir la fiche en cliquant sur le QR
+                      onClick={(e) => e.stopPropagation()}
                     />
                   )}
                 </div>

@@ -4,28 +4,39 @@ import PageWrapper from "../components/PageWrapper";
 import { ArrowLeft, Save } from "lucide-react";
 import { useApiMutation } from "../hooks/useApiMutation";
 
+interface StorageForm {
+  name: string;
+  location: string;
+}
+
 const StorageCreate = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<StorageForm>({
     name: "",
     location: "",
   });
 
-  // 🧠 Hook pour créer un entrepôt
-  const { mutate, loading, error } = useApiMutation<
-    any,
-    { name: string; address: string; ownerId: string }
-  >("/api/storages", "POST", {
-    onSuccess: () => {
-      alert("✅ Entrepôt créé avec succès !");
-      navigate("/storages");
-    },
-    onError: () => {
-      alert("❌ Erreur lors de la création de l'entrepôt");
-    },
-  });
+  // 🔹 Hook pour créer un entrepôt
+  const {
+    mutate: createStorage,
+    loading,
+    error,
+  } = useApiMutation<any, { name: string; address: string; ownerId: string }>(
+    "/api/storages",
+    "POST",
+    {
+      onSuccess: () => {
+        alert("✅ Entrepôt créé avec succès !");
+        navigate("/storages");
+      },
+      onError: (err) => {
+        console.error("Erreur création entrepôt :", err);
+        alert("❌ Erreur lors de la création de l'entrepôt");
+      },
+    }
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -36,7 +47,12 @@ const StorageCreate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await mutate({
+    if (!user?._id) {
+      alert("Utilisateur introuvable !");
+      return;
+    }
+
+    createStorage({
       ownerId: user._id,
       name: form.name,
       address: form.location,
