@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useCloudinaryImage } from "../../hooks/useCloudinaryImage";
+import BoxDetailsItem from "../../components/boxDetailsItem";
 import { ArrowLeft, Printer, AlertTriangle, Edit3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useApi } from "../../hooks/useApi"; // ✅ déjà importé
@@ -54,6 +56,8 @@ const BoxDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  const { src: qrOptimized } = useCloudinaryImage(box?.qrcodeURL, { w: 300 });
 
   // ✅ refetch automatique quand l'id change
   useEffect(() => {
@@ -208,7 +212,7 @@ const BoxDetails = () => {
           >
             {box.qrcodeURL && (
               <img
-                src={box.qrcodeURL}
+                src={qrOptimized}
                 alt="QR"
                 style={{
                   width: "3cm",
@@ -267,31 +271,8 @@ const BoxDetails = () => {
           </div>
           {box.content.length > 0 ? (
             <ul className="space-y-2">
-              {box.content.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start justify-start gap-3 px-3 py-2 text-sm text-gray-200 bg-gray-800 rounded-lg"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex">
-                      {item.picture && (
-                        <img
-                          src={item.picture}
-                          alt={item.name}
-                          className="object-cover w-20 h-20 border border-gray-700 rounded-lg"
-                        />
-                      )}
-                      <span className="ml-3 font-medium text-yellow-400 text-md">
-                        {item.name}
-                      </span>
-                    </div>
-                    {item.quantity && (
-                      <span className="h-full p-2 text-xl text-gray-300">
-                        x{item.quantity}
-                      </span>
-                    )}
-                  </div>
-                </li>
+              {box.content.map((item) => (
+                <BoxDetailsItem key={item._id} item={item} />
               ))}
             </ul>
           ) : (
