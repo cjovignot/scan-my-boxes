@@ -1,6 +1,9 @@
 import "./App.css";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
+import { AuthProvider } from "./contexts/AuthProvider";
+import { useAuth } from "./contexts/useAuth";
 import MobileLayout from "./layouts/MobileLayout";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -17,39 +20,35 @@ import ScanPage from "./pages/ScanPage";
 import BoxCreate from "./pages/BoxCreate";
 import StorageCreate from "./pages/StorageCreate";
 import AuthSuccess from "./pages/AuthSuccess";
-import { AuthProvider } from "./contexts/AuthProvider";
-import { useEffect } from "react";
+
+// ✅ Composant de protection des routes
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
 
 function App() {
   const location = useLocation();
 
-  // ✅ (1) Enregistrement du Service Worker (uniquement en production)
+  // Service Worker
   useEffect(() => {
     if ("serviceWorker" in navigator && import.meta.env.PROD) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
-          // .then((reg) =>
-          //   console.log("🟢 Service Worker enregistré :", reg.scope)
-          // )
           .catch((err) => console.error("🔴 Erreur Service Worker :", err));
       });
-    } else {
-      // console.log("⚙️ Service Worker ignoré (mode développement)");
     }
   }, []);
 
-  // ✅ (2) Détection du mode PWA (standalone)
+  // Mode PWA
   useEffect(() => {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone; // support iOS
-
+      (window.navigator as any).standalone;
     if (isStandalone) {
-      // console.log("📱 App lancée en mode PWA standalone");
-      // Optionnel : tu pourrais stocker ça dans ton contexte Auth ou analytics
-    } else {
-      // console.log("🌐 App lancée dans le navigateur classique");
+      console.log("📱 PWA standalone");
     }
   }, []);
 
@@ -58,21 +57,83 @@ function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route element={<MobileLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/useraccount" element={<UserAccount />} />
-            <Route path="/register" element={<Register />} />
+            {/* Routes publiques */}
             <Route path="/login" element={<Login />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/auth/success" element={<AuthSuccess />} />
+
+            {/* Routes protégées */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/useraccount"
+              element={
+                <ProtectedRoute>
+                  <UserAccount />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute>
+                  <AdminUsers />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/storages" element={<Storages />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/boxes" element={<Boxes />} />
             <Route path="/box/boxdetails/:id" element={<BoxDetails />} />
-            <Route path="/box/boxEdit/:id" element={<BoxEdit />} />
-            <Route path="/boxes/new" element={<BoxCreate />} />
-            <Route path="/storages/new" element={<StorageCreate />} />
+            <Route
+              path="/box/boxEdit/:id"
+              element={
+                <ProtectedRoute>
+                  <BoxEdit />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/boxes/new"
+              element={
+                <ProtectedRoute>
+                  <BoxCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/storages/new"
+              element={
+                <ProtectedRoute>
+                  <StorageCreate />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/scan" element={<ScanPage />} />
-            <Route path="/auth/success" element={<AuthSuccess />} />
+
+            {/* Redirection par défaut */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </AnimatePresence>

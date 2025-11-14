@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { ArrowLeft, ChevronDown, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, X, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 import { useApiMutation } from "../hooks/useApiMutation";
@@ -175,11 +175,14 @@ const ScanPage = () => {
         {mode === "stockage" && (
           <div className="w-full max-w-md mt-4 mb-4">
             {!user?._id ? (
-              <div className="flex flex-col items-center gap-2 p-4 text-center border border-gray-700 rounded-lg">
-                <p>❌ Connectez-vous pour enregistrer les boîtes.</p>
+              <div className="flex flex-col items-center gap-2 p-4 text-center border border-gray-700 rounded-xl">
+                <span className="flex items-center gap-2 text-sm text-red-700">
+                  <AlertTriangle />
+                  <p>Connectez-vous pour enregistrer les boîtes.</p>
+                </span>
                 <button
                   onClick={() => navigate("/login")}
-                  className="px-4 py-2 text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
+                  className="w-full px-2 py-2 text-black bg-yellow-400 rounded-lg hover:bg-yellow-500"
                 >
                   Se connecter
                 </button>
