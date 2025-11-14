@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { ArrowLeft, ChevronDown, X, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 import { useApiMutation } from "../hooks/useApiMutation";
+
+interface Box {
+  _id: string;
+  number: string;
+}
 
 const ScanPage = () => {
   const navigate = useNavigate();
@@ -13,9 +18,10 @@ const ScanPage = () => {
   const [mode, setMode] = useState<"lecture" | "stockage">("lecture");
   const [selectedStorage, setSelectedStorage] = useState("");
   const [scannedBoxes, setScannedBoxes] = useState<string[]>([]);
+  const [scannedBoxesData, setScannedBoxesData] = useState<Box[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // 🔹 Appel de useApi uniquement si l'utilisateur est connecté
+  // 🔹 Récupération des entrepôts de l'utilisateur
   const {
     data: storages,
     loading: loadingStorages,
@@ -24,6 +30,7 @@ const ScanPage = () => {
     user?._id ? `/api/storages?ownerId=${user._id}` : null
   );
 
+  // 🔹 Mutation pour sauvegarder les boîtes
   const { mutate: saveBoxes, loading: saving } = useApiMutation<
     { success: boolean },
     { storageId: string; boxIds: string[]; userId: string }
@@ -31,6 +38,7 @@ const ScanPage = () => {
     onSuccess: () => {
       alert("✅ Boîtes enregistrées avec succès !");
       setScannedBoxes([]);
+      setScannedBoxesData([]);
       setShowModal(false);
     },
     onError: (err) => {
@@ -39,13 +47,13 @@ const ScanPage = () => {
     },
   });
 
-  const handleScan = (res: any) => {
+  // 🔹 Gestion du scan
+  const handleScan = async (res: any) => {
     if (!res || res.length === 0) return;
     const qrValue = res[0].rawValue;
 
-    // Si pas d'utilisateur connecté
     if (!user) {
-      setShowModal(true); // Ouvre le modal de connexion
+      setShowModal(true);
       return;
     }
 
@@ -58,22 +66,40 @@ const ScanPage = () => {
         return;
       }
 
-      // Redirection vers détails boîte
-      fetch(`${import.meta.env.VITE_API_URL}/api/boxes/${boxId}`)
-        .then((res) => res.json())
-        .then((box) => {
-          if (box.ownerId !== user._id) {
-            alert("❌ Vous n'êtes pas le propriétaire de cette boîte.");
-          } else {
-            navigate(`/box/boxdetails/${boxId}`);
-          }
-        })
-        .catch(() => alert("Erreur lors de la récupération de la boîte."));
+      try {
+        const box: Box = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/boxes/${boxId}`
+        ).then((res) => res.json());
+
+        if (box.ownerId !== user._id) {
+          alert("❌ Vous n'êtes pas le propriétaire de cette boîte.");
+        } else {
+          navigate(`/box/boxdetails/${boxId}`);
+        }
+      } catch {
+        alert("Erreur lors de la récupération de la boîte.");
+      }
     } else {
       // Mode stockage
-      setScannedBoxes((prev) =>
-        prev.includes(qrValue) ? prev : [...prev, qrValue]
-      );
+      const parts = qrValue.split("/");
+      const boxId = parts[parts.length - 1];
+
+      if (!scannedBoxes.includes(boxId)) {
+        setScannedBoxes((prev) => [...prev, boxId]);
+
+        // Récupérer les infos de la boîte avec useApi
+        try {
+          const box: Box = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/boxes/${boxId}`
+          ).then((res) => res.json());
+
+          setScannedBoxesData((prev) =>
+            prev.find((b) => b._id === box._id) ? prev : [...prev, box]
+          );
+        } catch {
+          console.error("Erreur lors de la récupération de la boîte");
+        }
+      }
     }
   };
 
@@ -137,7 +163,7 @@ const ScanPage = () => {
       {/* Scanner */}
       <div className="flex flex-col items-center flex-1 px-4 py-6">
         <div className="relative w-full max-w-md overflow-hidden border border-gray-700 aspect-square rounded-2xl">
-          <div className="absolute z-20 flex items-center gap-2 px-2 py-1 -translate-x-1/2 border border-gray-600 rounded-full top-3 left-1/2 bg-black/60 backdrop-blur-sm w-fit">
+          {/* <div className="absolute z-20 flex items-center gap-2 px-2 py-1 -translate-x-1/2 border border-gray-600 rounded-full top-3 left-1/2 bg-black/60 backdrop-blur-sm w-fit">
             <span className="text-xs text-gray-300 whitespace-nowrap">
               Mode lecture
             </span>
@@ -156,7 +182,7 @@ const ScanPage = () => {
             <span className="text-xs text-gray-300 whitespace-nowrap">
               Mode stockage
             </span>
-          </div>
+          </div> */}
 
           <Scanner
             onScan={handleScan}
@@ -216,10 +242,10 @@ const ScanPage = () => {
 
                 <button
                   onClick={() => setShowModal(true)}
-                  disabled={scannedBoxes.length === 0}
+                  disabled={scannedBoxesData.length === 0}
                   className="w-full px-4 py-2 mt-4 text-sm text-black bg-yellow-400 rounded-lg hover:bg-yellow-500 disabled:opacity-50"
                 >
-                  Voir la saisie ({scannedBoxes.length})
+                  Voir la saisie ({scannedBoxesData.length})
                 </button>
               </>
             )}
@@ -233,7 +259,7 @@ const ScanPage = () => {
           <div className="flex flex-col w-full max-w-md overflow-hidden border border-gray-700 bg-gray-950 rounded-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
               <h3 className="text-yellow-400">
-                Boîtes scannées ({scannedBoxes.length})
+                Boîtes scannées ({scannedBoxesData.length})
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -244,18 +270,18 @@ const ScanPage = () => {
             </div>
 
             <div className="flex-1 p-3 overflow-y-auto max-h-[60vh]">
-              {scannedBoxes.length === 0 ? (
+              {scannedBoxesData.length === 0 ? (
                 <p className="text-sm text-gray-400">
                   Aucune boîte scannée pour l’instant.
                 </p>
               ) : (
                 <ul className="space-y-1">
-                  {scannedBoxes.map((b) => (
+                  {scannedBoxesData.map((box) => (
                     <li
-                      key={b}
+                      key={box._id}
                       className="py-1 text-sm text-gray-300 border-b border-gray-800 last:border-none"
                     >
-                      📦 {b}
+                      📦 {box.number}
                     </li>
                   ))}
                 </ul>
