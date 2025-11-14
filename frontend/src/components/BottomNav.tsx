@@ -62,8 +62,27 @@ const BottomNav = () => {
     ];
   }
 
+  // function getRadius(size: number): number {
+  //   return (10 / 57) * size;
+  // }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-800 shadow-lg bg-gray-950 md:hidden">
+      {/* FAB central
+      <div className="flex items-center justify-center w-full min-h-screen bg-black">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          onClick={handleFabClick}
+          style={{
+            borderRadius: getRadius(192), // 👈 radius dynamique
+          }}
+          className="items-center p-3 text-yellow-400 border-2 shadow-lg border-yellow-400/70 bg-gray-950"
+        >
+          <ScanQrCode size={"192px"} />
+        </motion.button>
+      </div> */}
       <div className="relative flex items-center justify-between gap-10 py-3">
         {/* Bloc gauche */}
         <div className="flex flex-1 justify-evenly">
