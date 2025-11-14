@@ -76,9 +76,9 @@ const BottomNav = () => {
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
           onClick={handleFabClick}
           style={{
-            borderRadius: getRadius(192), // 👈 radius dynamique
+            borderRadius: getRadius(200), // 👈 radius dynamique
           }}
-          className="items-center p-3 text-yellow-400 border-2 shadow-lg border-yellow-400/70 bg-gray-950"
+          className="items-center p-3 text-yellow-400 shadow-lg border-5 border-yellow-400/70 bg-gray-950"
         >
           <ScanQrCode size={"192px"} />
         </motion.button>
