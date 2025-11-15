@@ -391,7 +391,15 @@ const PrintGroup = () => {
       {/* Rendu invisible pour html-to-image */}
       <div
         ref={printContainerRef}
-        style={{ position: "absolute", left: "-9999px", top: "-9999px" }}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: "-9999px",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
       >
         {labelsWithOffset.map((box, idx) => {
           const qrSize = labelHeightPx * 0.9;
