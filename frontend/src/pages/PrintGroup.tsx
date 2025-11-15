@@ -1,8 +1,15 @@
 import { useEffect, useState, useRef } from "react";
 import { usePrint } from "../hooks/usePrint";
 import { useApi } from "../hooks/useApi";
-import { X, AlertTriangle } from "lucide-react";
+import {
+  X,
+  AlertTriangle,
+  ChevronDown,
+  RotateCcw,
+  PrinterCheck,
+} from "lucide-react";
 import * as htmlToImage from "html-to-image";
+import { LABEL_PRESETS } from "../utils/labelPresets";
 
 interface Box {
   _id: string;
@@ -18,7 +25,12 @@ const PrintGroup = () => {
   const { selectedBoxes, toggleBox, clearSelection } = usePrint();
   const [boxesToPrint, setBoxesToPrint] = useState<Box[]>([]);
   const [startIndex, setStartIndex] = useState(0);
+  const [presetId, setPresetId] = useState("microapp‑5057");
+  const preset = LABEL_PRESETS.find((p) => p.id === presetId)!;
+
+  const previewRef = useRef<HTMLDivElement>(null);
   const printContainerRef = useRef<HTMLDivElement>(null);
+  const [containerWidthPx, setContainerWidthPx] = useState(window.innerWidth);
 
   const { data, loading, error } = useApi<Box[]>(
     selectedBoxes.length > 0
@@ -35,10 +47,21 @@ const PrintGroup = () => {
     }
   }, [data]);
 
+  // Adapter largeur du conteneur à la largeur réelle de l'écran
+  useEffect(() => {
+    const updateWidth = () => {
+      const width = previewRef.current?.clientWidth || window.innerWidth;
+      setContainerWidthPx(width * 0.9);
+    };
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
+
   if (selectedBoxes.length === 0)
     return (
-      <div className="p-6 text-center text-gray-400">
-        Aucune boîte sélectionnée pour l'impression.
+      <div className="flex items-center justify-center h-screen p-6 text-yellow-400">
+        Aucune boîte sélectionnée pour l'impression
       </div>
     );
 
@@ -56,26 +79,30 @@ const PrintGroup = () => {
       </div>
     );
 
-  const rowsPerPage = 6;
-  const colsPerPage = 2;
+  const rowsPerPage = preset.rows;
+  const colsPerPage = preset.cols;
   const totalSlots = rowsPerPage * colsPerPage;
+  const gapPx = 4;
 
   const labelsWithOffset = Array(totalSlots).fill(null);
   boxesToPrint.forEach((box, idx) => {
     const position = startIndex + idx;
-    if (position < totalSlots) {
-      labelsWithOffset[position] = box;
-    }
+    if (position < totalSlots) labelsWithOffset[position] = box;
   });
+
+  const labelRatio = preset.labelWidthCm / preset.labelHeightCm;
+  const labelWidthPx =
+    (containerWidthPx - gapPx * (colsPerPage - 1)) / colsPerPage;
+  const labelHeightPx = labelWidthPx / labelRatio;
 
   const handlePrint = async () => {
     if (!printContainerRef.current) return;
 
     const images: string[] = [];
-
     const labelElements = Array.from(
       printContainerRef.current.children
     ) as HTMLDivElement[];
+
     for (const el of labelElements) {
       try {
         const dataUrl = await htmlToImage.toPng(el, {
@@ -97,15 +124,32 @@ const PrintGroup = () => {
         <head>
           <title>Étiquettes</title>
           <style>
-            @page { margin:0; }
-            body { margin:0; padding:0; display:flex; flex-wrap:wrap; gap:0.5cm; }
-            img { width:10cm; height:4cm; object-fit:contain; }
+            @page { size: A4; margin: 0; }
+            body {
+              margin: 0;
+              padding-top: ${preset.marginTopCm}cm;
+              padding-left: ${preset.marginLeftCm}cm;
+              display: grid;
+              grid-template-columns: repeat(${preset.cols}, ${
+      preset.labelWidthCm
+    }cm);
+              grid-auto-rows: ${preset.labelHeightCm}cm;
+              gap: ${preset.gutterYcm}cm ${preset.gutterXcm}cm;
+            }
+            img {
+              width: ${preset.labelWidthCm}cm;
+              height: ${preset.labelHeightCm}cm;
+              object-fit: contain;
+            }
           </style>
         </head>
         <body>
           ${images.map((src) => `<img src="${src}" />`).join("")}
           <script>
-            window.onload = () => { window.print(); window.onafterprint = () => window.close(); };
+            window.onload = () => { 
+              window.print(); 
+              window.onafterprint = () => window.close(); 
+            };
           </script>
         </body>
       </html>
@@ -114,142 +158,277 @@ const PrintGroup = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ height: "100vh", overflowY: "auto" }}>
       <h1 className="mb-4 text-xl font-bold text-yellow-400">
         Aperçu impression
       </h1>
 
-      {/* Décalage */}
-      <div className="flex items-center gap-2 mb-4">
-        <label className="text-sm font-medium" htmlFor="startIndex">
-          Commencer à la case :
-        </label>
-        <input
-          type="number"
-          id="startIndex"
-          min={0}
-          max={totalSlots - 1}
-          value={startIndex}
-          onChange={(e) => setStartIndex(Number(e.target.value))}
-          className="w-16 p-1 border rounded"
+      {/* Sélection du preset */}
+      <label className="block mb-1 text-sm font-medium">
+        Format d'étiquettes :
+      </label>
+      <div className="relative flex items-center mb-4">
+        <select
+          value={presetId}
+          onChange={(e) => setPresetId(e.target.value)}
+          className="w-full px-3 py-2 pr-10 text-sm text-white border border-gray-700 rounded-lg appearance-none bg-gray-950 focus:outline-none focus:ring-1 focus:ring-yellow-400 hover:bg-gray-700"
+        >
+          {LABEL_PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={16}
+          className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-3 top-[52%]"
         />
-        <span className="text-xs text-gray-500">
-          (0 = première case en haut à gauche)
-        </span>
       </div>
 
-      {/* Grille d'aperçu */}
-      <div className="grid grid-cols-2 gap-2">
-        {labelsWithOffset.map((box, idx) => (
-          <div
-            key={idx}
-            className="relative flex flex-col justify-center p-2 text-black bg-white border border-gray-700 rounded min-h-18"
-          >
-            {box ? (
-              <>
-                <div className="flex w-full h-full">
+      {/* Aperçu adaptatif */}
+      <div
+        ref={previewRef}
+        style={{
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+          gap: `${gapPx}px`,
+        }}
+      >
+        {labelsWithOffset.map((box, idx) => {
+          const qrSize = labelHeightPx * 0.9;
+          const padding = 6;
+          const contentWidth = labelWidthPx - qrSize - padding * 2;
+          const contentHeight = labelHeightPx - padding * 2;
+          const baseFontSize = 16;
+          const scale = Math.min(contentWidth / 80, contentHeight / 50);
+
+          return (
+            <div
+              key={idx}
+              onClick={() => setStartIndex(idx)}
+              style={{
+                width: labelWidthPx,
+                height: labelHeightPx,
+                backgroundColor: "#fff",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: `${padding}px 2px`,
+                boxSizing: "border-box",
+                position: "relative",
+                borderRadius: "8px",
+                cursor: "pointer",
+                border:
+                  startIndex === idx ? "2px dashed #facc15" : "1px solid #ddd",
+              }}
+            >
+              {box ? (
+                <>
                   {box.qrcodeURL && (
                     <img
                       src={box.qrcodeURL}
                       alt={`QR ${box.number}`}
-                      className="border border-gray-300 rounded-md w-14 h-14"
+                      style={{
+                        width: qrSize,
+                        height: qrSize,
+                        marginRight: padding,
+                        objectFit: "contain",
+                        borderRadius: "10px",
+                      }}
                     />
                   )}
-                  <div className="flex flex-col ml-2">
-                    <span className="text-sm font-bold">{box.number}</span>
-                    <span className="text-xs font-semibold text-gray-700">
-                      {box.destination}
-                    </span>
+                  <div
+                    style={{
+                      width: contentWidth,
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      color: "black",
+                    }}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: `${baseFontSize * scale}px`,
+                          lineHeight: 1.1,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {box.number}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: `${baseFontSize * 0.8 * scale}px`,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          color: "#555",
+                        }}
+                      >
+                        {box.destination}
+                      </span>
+                    </div>
                     {box.fragile && (
-                      <div className="inline-flex items-center gap-1 px-2 mt-1 text-xs font-semibold text-red-700 bg-red-100 border border-red-300 rounded-full">
-                        <AlertTriangle className="w-3 h-3 text-red-500" />
+                      <div
+                        style={{
+                          fontSize: `${baseFontSize * 0.7 * scale}px`,
+                          gap: 2,
+                        }}
+                        className="flex items-center self-end justify-center px-1 mr-1 font-bold text-red-900 border border-red-900 rounded-full w-fit bg-red-700/10"
+                      >
+                        <AlertTriangle
+                          size={`${baseFontSize * 0.7 * scale}px`}
+                        />
                         Fragile
                       </div>
                     )}
                   </div>
-                </div>
-                <button
-                  onClick={() => toggleBox(box._id)}
-                  className="absolute p-1 text-xs text-white bg-red-400 rounded top-1 right-1 hover:bg-red-500"
-                >
-                  <X size={12} />
-                </button>
-              </>
-            ) : (
-              <span className="w-full text-xs text-center text-gray-400">
-                Vide
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Container invisible pour html-to-image */}
-      <div
-        ref={printContainerRef}
-        style={{ position: "absolute", left: "-9999px", top: "-9999px" }}
-      >
-        {labelsWithOffset.map((box, idx) => {
-          if (!box)
-            return <div key={idx} style={{ width: "10cm", height: "4cm" }} />;
-          return (
-            <div
-              key={idx}
-              style={{
-                width: "10cm",
-                height: "4cm",
-                display: "flex",
-                padding: "0.3cm",
-                fontFamily: "Arial, sans-serif",
-                border: "1px solid #ccc",
-                backgroundColor: "#fff",
-                boxSizing: "border-box",
-              }}
-            >
-              {box.qrcodeURL && (
-                <img
-                  src={box.qrcodeURL}
-                  alt="QR"
-                  style={{ width: "3cm", height: "3cm", marginRight: "0.3cm" }}
-                />
-              )}
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
-                  {box.number}
-                </span>
-                <span style={{ fontSize: "0.9em", color: "#555" }}>
-                  {box.destination}
-                </span>
-                {box.fragile && (
-                  <div
+                  <button
+                    className="text-white bg-red-800 rounded-full"
+                    onClick={() => toggleBox(box._id)}
                     style={{
-                      color: "red",
-                      fontSize: "0.7em",
-                      marginTop: "0.2em",
+                      position: "absolute",
+                      padding: "2px",
+                      top: -5,
+                      right: -5,
                     }}
                   >
-                    ⚠ Fragile
-                  </div>
-                )}
-              </div>
+                    <X size={`${baseFontSize * 0.7 * scale}px`} />
+                  </button>
+                </>
+              ) : (
+                <span
+                  style={{
+                    width: "100%",
+                    textAlign: "center",
+                    color: "#aaa",
+                    fontSize: `${baseFontSize * 0.7 * scale}px`,
+                  }}
+                >
+                  Vide
+                </span>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 mt-4">
+      {/* Rendu invisible pour html-to-image */}
+      <div
+        ref={printContainerRef}
+        style={{ position: "absolute", left: "-9999px", top: "-9999px" }}
+      >
+        {labelsWithOffset.map((box, idx) => {
+          const qrSize = labelHeightPx * 0.9;
+          const padding = 6;
+          const contentWidth = labelWidthPx - qrSize - padding * 2;
+          const contentHeight = labelHeightPx - padding * 2;
+          const baseFontSize = 16;
+          const scale = Math.min(contentWidth / 80, contentHeight / 50);
+
+          return (
+            <div
+              key={idx}
+              style={{
+                width: labelWidthPx,
+                height: labelHeightPx,
+                backgroundColor: "#fff",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: `${padding}px 2px`,
+                boxSizing: "border-box",
+                position: "relative",
+                borderRadius: "8px",
+              }}
+            >
+              {box ? (
+                <>
+                  {box.qrcodeURL && (
+                    <img
+                      src={box.qrcodeURL}
+                      alt={`QR ${box.number}`}
+                      style={{
+                        width: qrSize,
+                        height: qrSize,
+                        marginRight: padding,
+                        objectFit: "contain",
+                        borderRadius: "10px",
+                      }}
+                    />
+                  )}
+                  <div
+                    style={{
+                      width: contentWidth,
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      color: "black",
+                    }}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: `${baseFontSize * scale}px`,
+                          lineHeight: 1.1,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {box.number}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: `${baseFontSize * 0.8 * scale}px`,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          color: "#555",
+                        }}
+                      >
+                        {box.destination}
+                      </span>
+                    </div>
+                    {box.fragile && (
+                      <div
+                        style={{
+                          fontSize: `${baseFontSize * 0.7 * scale}px`,
+                          gap: 2,
+                        }}
+                        className="flex items-center self-end justify-center px-1 mr-1 font-bold text-red-900 border border-red-900 rounded-full w-fit bg-red-700/10"
+                      >
+                        <AlertTriangle
+                          size={`${baseFontSize * 0.7 * scale}px`}
+                        />
+                        Fragile
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-end w-full gap-2 mt-4">
         <button
           onClick={clearSelection}
           className="px-4 py-2 text-black bg-yellow-400 rounded hover:bg-yellow-500"
         >
-          Vider la sélection
+          <RotateCcw />
         </button>
         <button
           onClick={handlePrint}
-          className="px-4 py-2 text-black bg-green-400 rounded hover:bg-green-500"
+          className="flex gap-2 px-4 py-2 text-black bg-green-400 rounded hover:bg-green-500"
         >
-          Imprimer les étiquettes
+          <PrinterCheck /> Imprimer
         </button>
       </div>
     </div>

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 const FloatingPrintButton = () => {
   const { selectedBoxes } = usePrint();
-  console.log(selectedBoxes);
   const navigate = useNavigate();
 
   if (selectedBoxes.length === 0) return null; // 🚀 n'affiche rien si vide

@@ -9,6 +9,7 @@ import {
   Edit3,
   Plus,
   Minus,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useApi } from "../../hooks/useApi";
@@ -116,43 +117,43 @@ const BoxDetails = () => {
   }, [box]);
 
   // Impression
-  const handlePrint = () => {
-    if (!labelImage) return;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+  // const handlePrint = () => {
+  //   if (!labelImage) return;
+  //   const printWindow = window.open("", "_blank");
+  //   if (!printWindow) return;
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Étiquette ${box?.number}</title>
-          <style>
-            @page {
-              size: 10cm 4cm;
-              margin: 0;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-            }
-            img {
-              width: 10cm;
-              height: 4cm;
-              object-fit: contain;
-              display: block;
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${labelImage}" alt="Étiquette" />
-          <script>
-            window.onload = () => { window.print(); window.onafterprint = () => window.close(); };
-          </script>
-        </body>
-      </html>
-    `);
+  //   printWindow.document.write(`
+  //     <html>
+  //       <head>
+  //         <title>Étiquette ${box?.number}</title>
+  //         <style>
+  //           @page {
+  //             size: 10cm 4cm;
+  //             margin: 0;
+  //           }
+  //           html, body {
+  //             margin: 0;
+  //             padding: 0;
+  //           }
+  //           img {
+  //             width: 10cm;
+  //             height: 4cm;
+  //             object-fit: contain;
+  //             display: block;
+  //           }
+  //         </style>
+  //       </head>
+  //       <body>
+  //         <img src="${labelImage}" alt="Étiquette" />
+  //         <script>
+  //           window.onload = () => { window.print(); window.onafterprint = () => window.close(); };
+  //         </script>
+  //       </body>
+  //     </html>
+  //   `);
 
-    printWindow.document.close();
-  };
+  //   printWindow.document.close();
+  // };
 
   if (loading)
     return (
@@ -298,6 +299,14 @@ const BoxDetails = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative max-w-full max-h-[90vh] overflow-auto p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow-xl">
+            <div className="flex items-end justify-end w-full mb-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 text-sm text-gray-300 transition-colors rounded-lg hover:bg-gray-800"
+              >
+                <X />
+              </button>
+            </div>
             {generating ? (
               <p className="text-gray-400">⚙️ Génération de l’étiquette...</p>
             ) : labelImage ? (
@@ -311,13 +320,13 @@ const BoxDetails = () => {
             )}
 
             <div className="flex justify-center gap-4 mt-6">
-              <button
+              {/* <button
                 onClick={handlePrint}
                 disabled={!labelImage}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-black bg-yellow-400 rounded-lg hover:bg-yellow-500 disabled:opacity-50"
               >
                 <Printer size={20} />
-              </button>
+              </button> */}
               <button
                 className={`flex justify-center items-center gap-1 px-2 py-2 text-sm font-medium border-2 rounded-lg hover:bg-yellow-500 disabled:opacity-50
     ${
@@ -333,13 +342,6 @@ const BoxDetails = () => {
                   <Plus size={15} />
                 )}
                 <Printer size={20} />
-              </button>
-
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-300 transition-colors border-2 border-gray-800 rounded-lg hover:bg-gray-800"
-              >
-                Fermer
               </button>
             </div>
           </div>
