@@ -140,6 +140,7 @@ const PrintGroup = () => {
       printContainerRef.current.children
     ) as HTMLDivElement[];
 
+    // Génération PNG pour chaque étiquette
     for (const el of labelElements) {
       try {
         const dataUrl = await htmlToImage.toPng(el, {
@@ -153,46 +154,59 @@ const PrintGroup = () => {
       }
     }
 
+    // Ouverture de la fenêtre d'impression EXACTEMENT comme dans BoxDetails
     const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+    if (!printWindow) {
+      console.error("Impossible d'ouvrir la fenêtre d'impression");
+      return;
+    }
 
     printWindow.document.write(`
-      <html>
-        <head>
-          <title>Étiquettes</title>
-          <style>
-            @page { size: A4; margin: 0; }
-            body {
-              margin: 0;
-              padding-top: ${(preset as any).marginTopCm}cm;
-              padding-left: ${(preset as any).marginLeftCm}cm;
-              display: grid;
-              grid-template-columns: repeat(${(preset as any).cols}, ${
-      (preset as any).labelWidthCm
+    <html>
+      <head>
+        <title>Étiquettes</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          body {
+            padding-top: ${preset.marginTopCm}cm;
+            padding-left: ${preset.marginLeftCm}cm;
+            display: grid;
+            grid-template-columns: repeat(${preset.cols}, ${
+      preset.labelWidthCm
     }cm);
-              grid-auto-rows: ${(preset as any).labelHeightCm}cm;
-              gap: ${(preset as any).gutterYcm}cm ${
-      (preset as any).gutterXcm
-    }cm;
-            }
-            img {
-              width: ${(preset as any).labelWidthCm}cm;
-              height: ${(preset as any).labelHeightCm}cm;
-              object-fit: contain;
-            }
-          </style>
-        </head>
-        <body>
-          ${images.map((src) => `<img src="${src}" />`).join("")}
-          <script>
-            window.onload = () => { 
-              window.print(); 
-              window.onafterprint = () => window.close(); 
-            };
-          </script>
-        </body>
-      </html>
-    `);
+            grid-auto-rows: ${preset.labelHeightCm}cm;
+            gap: ${preset.gutterYcm}cm ${preset.gutterXcm}cm;
+          }
+          img {
+            width: ${preset.labelWidthCm}cm;
+            height: ${preset.labelHeightCm}cm;
+            object-fit: contain;
+            display: block;
+            margin: 0;
+            padding: 0;
+          }
+        </style>
+      </head>
+      <body>
+        ${images.map((src) => `<img src="${src}" />`).join("")}
+        <script>
+          window.onload = () => {
+            window.print();
+            window.onafterprint = () => window.close();
+          };
+        </script>
+      </body>
+    </html>
+  `);
+
     printWindow.document.close();
   };
 
