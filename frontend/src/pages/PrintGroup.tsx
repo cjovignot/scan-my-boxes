@@ -392,13 +392,13 @@ const PrintGroup = () => {
       <div
         ref={printContainerRef}
         style={{
-          position: "absolute",
-          left: "-9999px",
-          top: "-9999px",
-          width: "1px",
-          height: "1px",
+          position: "fixed",
+          inset: "0",
+          width: 0,
+          height: 0,
           overflow: "hidden",
           pointerEvents: "none",
+          opacity: 0,
         }}
       >
         {labelsWithOffset.map((box, idx) => {
