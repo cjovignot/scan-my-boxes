@@ -135,82 +135,76 @@ const PrintGroup = () => {
   const handlePrint = async () => {
     if (!printContainerRef.current) return;
 
-    // ⚡ ouvrir immédiatement la fenêtre
+    // ⚡ ouvrir la fenêtre immédiatement
     const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      console.error("Impossible d'ouvrir la fenêtre d'impression");
-      return;
-    }
+    if (!printWindow) return;
 
-    // ⚡ mettre un message temporaire pendant génération
-    printWindow.document.write(`
-    <html>
-      <head><title>Étiquettes</title></head>
-      <body><p>Génération en cours...</p></body>
-    </html>
-  `);
-    printWindow.document.close();
-
-    // Générer les images
-    const images: string[] = [];
-    const labelElements = Array.from(
-      printContainerRef.current.children
-    ) as HTMLDivElement[];
-
-    for (const el of labelElements) {
-      try {
-        const dataUrl = await htmlToImage.toPng(el, {
-          quality: 1,
-          backgroundColor: "#fff",
-          pixelRatio: 2,
-        });
-        images.push(dataUrl);
-      } catch (err) {
-        console.error("❌ Erreur génération étiquette :", err);
-      }
-    }
-
-    // Injecter le vrai contenu dans la fenêtre déjà ouverte
+    // ⚡ écrire une page minimaliste AVANT les async
     printWindow.document.write(`
     <html>
       <head>
-        <title>Étiquettes</title>
+        <title>Impression…</title>
         <style>
-          @page {
-            size: ${preset.labelWidthCm}cm ${preset.labelHeightCm}cm;
-            margin: 0;
-          }
-          html, body {
+          @page { margin: 0; }
+          body {
             margin: 0;
             padding: 0;
-            background: #fff;
-          }
-          body {
+            background: white;
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: ${preset.gutterYcm}cm;
           }
           img {
             width: ${preset.labelWidthCm}cm;
             height: ${preset.labelHeightCm}cm;
             object-fit: contain;
-            display: block;
-            margin: 0 auto;
           }
         </style>
       </head>
       <body>
-        ${images.map((src) => `<img src="${src}" />`).join("")}
+        <p id="status">Génération en cours…</p>
+        <div id="labels"></div>
+
         <script>
-          window.onload = () => { 
-            window.print(); 
-            window.onafterprint = () => window.close(); 
-          };
+          window.addEventListener("message", (event) => {
+            const images = event.data;
+            const container = document.getElementById("labels");
+            const status = document.getElementById("status");
+            status.remove();
+
+            images.forEach(src => {
+              const img = document.createElement("img");
+              img.src = src;
+              container.appendChild(img);
+            });
+
+            window.print();
+            window.onafterprint = () => window.close();
+          });
         </script>
       </body>
     </html>
   `);
+
     printWindow.document.close();
+
+    // 🔹 Génération des PNG (asynchrone)
+    const images: string[] = [];
+    const elements = Array.from(
+      printContainerRef.current.children
+    ) as HTMLDivElement[];
+
+    for (const el of elements) {
+      const dataUrl = await htmlToImage.toPng(el, {
+        backgroundColor: "#fff",
+        pixelRatio: 2,
+      });
+      images.push(dataUrl);
+    }
+
+    // 🔹 envoyer les images à la fenêtre
+    printWindow.postMessage(images, "*");
   };
 
   return (
