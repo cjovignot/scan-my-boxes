@@ -135,6 +135,23 @@ const PrintGroup = () => {
   const handlePrint = async () => {
     if (!printContainerRef.current) return;
 
+    // ⚡ ouvrir immédiatement la fenêtre
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      console.error("Impossible d'ouvrir la fenêtre d'impression");
+      return;
+    }
+
+    // ⚡ mettre un message temporaire pendant génération
+    printWindow.document.write(`
+    <html>
+      <head><title>Étiquettes</title></head>
+      <body><p>Génération en cours...</p></body>
+    </html>
+  `);
+    printWindow.document.close();
+
+    // Générer les images
     const images: string[] = [];
     const labelElements = Array.from(
       printContainerRef.current.children
@@ -153,12 +170,7 @@ const PrintGroup = () => {
       }
     }
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      console.error("Impossible d'ouvrir la fenêtre d'impression");
-      return;
-    }
-
+    // Injecter le vrai contenu dans la fenêtre déjà ouverte
     printWindow.document.write(`
     <html>
       <head>
@@ -198,7 +210,6 @@ const PrintGroup = () => {
       </body>
     </html>
   `);
-
     printWindow.document.close();
   };
 
