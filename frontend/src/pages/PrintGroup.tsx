@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import jsPDF from "jspdf";
 import { usePrint } from "../hooks/usePrint";
 import { useApi } from "../hooks/useApi";
 import { useAuth } from "../contexts/useAuth";
@@ -23,7 +24,6 @@ interface Box {
 }
 
 const PrintGroup = () => {
-  // ---------- HOOKS ----------
   const { selectedBoxes, toggleBox, clearSelection } = usePrint();
   const [boxesToPrint, setBoxesToPrint] = useState<Box[]>([]);
   const [startIndex, setStartIndex] = useState(0);
@@ -51,11 +51,9 @@ const PrintGroup = () => {
 
   // ---------- EFFECTS ----------
 
-  // Ajouter le preset custom du user si existant
   useEffect(() => {
     if (userData?.printSettings) {
       const ps = userData.printSettings;
-
       const fullPreset = {
         id: ps.id || "custom",
         name: ps.name || "Personnalisé",
@@ -68,17 +66,14 @@ const PrintGroup = () => {
         gutterXcm: ps.gutterXcm || 0,
         gutterYcm: ps.gutterYcm || 0,
       };
-
       if (!presets.find((p) => p.id === fullPreset.id)) {
         setPresets((prev) => [...prev, fullPreset]);
       }
-
       setPresetId(fullPreset.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData]);
 
-  // Trier les boxes
   useEffect(() => {
     if (data) {
       const sortedBoxes = [...data].sort((a, b) =>
@@ -88,7 +83,6 @@ const PrintGroup = () => {
     }
   }, [data]);
 
-  // Ajuster la largeur du conteneur preview
   useEffect(() => {
     const updateWidth = () => {
       const width = previewRef.current?.clientWidth || window.innerWidth;
@@ -99,11 +93,10 @@ const PrintGroup = () => {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  // Génération des images pré-clic
+  // Génération des images
   useEffect(() => {
     const generateAll = async () => {
       if (!printContainerRef.current) return;
-
       const children = Array.from(
         printContainerRef.current.children
       ) as HTMLDivElement[];
@@ -114,7 +107,6 @@ const PrintGroup = () => {
 
       setGenerating(true);
       const imgs: string[] = [];
-
       for (const node of children) {
         try {
           const dataUrl = await htmlToImage.toPng(node, {
@@ -124,18 +116,14 @@ const PrintGroup = () => {
           });
           imgs.push(dataUrl);
         } catch (err) {
-          console.error("Erreur génération étiquette (pré-génération) :", err);
+          console.error("Erreur génération étiquette :", err);
         }
       }
-
       setLabelImages(imgs);
       setGenerating(false);
     };
 
-    const t = setTimeout(() => {
-      generateAll();
-    }, 50);
-
+    const t = setTimeout(() => generateAll(), 50);
     return () => clearTimeout(t);
   }, [boxesToPrint, presetId, containerWidthPx, startIndex]);
 
@@ -158,77 +146,44 @@ const PrintGroup = () => {
     (containerWidthPx - gapPx * (colsPerPage - 1)) / colsPerPage;
   const labelHeightPx = labelWidthPx / labelRatio;
 
-  // ---------- HANDLER PRINT VIA IFRAME ----------
-  const handlePrint = () => {
+  // ---------- PRINT PDF HANDLER ----------
+  const handlePrintPDF = () => {
     if (!labelImages || labelImages.length === 0) return;
 
-    // Créer un iframe invisible
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "absolute";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.left = "-9999px";
-    iframe.style.top = "-9999px";
-    document.body.appendChild(iframe);
+    const pageWidth = 210; // mm
+    const pageHeight = 297; // mm
+    const marginLeft = preset.marginLeftCm * 10; // cm -> mm
+    const marginTop = preset.marginTopCm * 10;
+    const gapX = preset.gutterXcm * 10;
+    const gapY = preset.gutterYcm * 10;
 
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
+    const usableWidth = pageWidth - marginLeft * 2 - gapX * (colsPerPage - 1);
+    const usableHeight = pageHeight - marginTop * 2 - gapY * (rowsPerPage - 1);
 
-    // Injection du HTML dans l'iframe
-    doc.open();
-    doc.write(`
-    <html>
-      <head>
-        <title>Étiquettes</title>
-        <style>
-          @page { size: A4; margin: 0; }
-          html, body { margin: 0; padding: 0; background: white; }
-          body {
-            padding-top: ${preset.marginTopCm}cm;
-            padding-left: ${preset.marginLeftCm}cm;
-            display: grid;
-            grid-template-columns: repeat(${preset.cols}, ${
-      preset.labelWidthCm
-    }cm);
-            grid-auto-rows: ${preset.labelHeightCm}cm;
-            gap: ${preset.gutterYcm}cm ${preset.gutterXcm}cm;
-          }
-          img {
-            width: ${preset.labelWidthCm}cm;
-            height: ${preset.labelHeightCm}cm;
-            object-fit: contain;
-            display: block;
-            margin: 0;
-            padding: 0;
-          }
-        </style>
-      </head>
-      <body>
-        ${labelImages.map((src) => `<img src="${src}" />`).join("")}
-        <script>
-          window.onload = () => {
-            window.focus();
-            window.print();
-            window.onafterprint = () => {
-              window.close();
-            };
-          };
-        </script>
-      </body>
-    </html>
-  `);
-    doc.close();
+    const labelWidth = usableWidth / colsPerPage;
+    const labelHeight = usableHeight / rowsPerPage;
 
-    // Forcer focus et print (sur certains mobiles)
-    iframe.contentWindow?.focus();
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
 
-    // Supprimer l'iframe après impression
-    const cleanup = () => {
-      document.body.removeChild(iframe);
-      iframe.removeEventListener("load", cleanup);
-    };
-    iframe.addEventListener("load", cleanup);
+    labelImages.forEach((img, idx) => {
+      const row = Math.floor(idx / colsPerPage);
+      const col = idx % colsPerPage;
+      const x = marginLeft + col * (labelWidth + gapX);
+      const y = marginTop + row * (labelHeight + gapY);
+      pdf.addImage(img, "PNG", x, y, labelWidth, labelHeight);
+    });
+
+    // Générer le PDF sous forme de blob
+    const pdfBlob = pdf.output("bloburl");
+
+    // Ouvrir une nouvelle fenêtre avec le PDF et lancer l'impression
+    const printWindow = window.open(pdfBlob, "_blank");
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+    }
   };
 
   // ---------- RETURN CONDITIONNEL ----------
@@ -383,9 +338,9 @@ const PrintGroup = () => {
                         className="flex items-center self-end justify-center px-1 mr-1 font-bold text-red-900 border border-red-900 rounded-full w-fit bg-red-700/10"
                       >
                         <AlertTriangle
-                          size={`${baseFontSize * 0.7 * scale}px`}
+                          size={`${baseFontSize * 0.8 * scale}px`}
                         />
-                        Fragile
+                        <p className="flex items-center h-full">FRAGILE</p>
                       </div>
                     )}
                   </div>
@@ -427,11 +382,11 @@ const PrintGroup = () => {
           <RotateCcw />
         </button>
         <button
-          onClick={handlePrint}
+          onClick={handlePrintPDF}
           className="flex gap-2 px-4 py-2 text-black bg-green-400 rounded-lg hover:bg-green-500"
           disabled={generating || labelImages.length === 0}
         >
-          <PrinterCheck /> Imprimer
+          <PrinterCheck /> Télécharger PDF
         </button>
       </div>
 
@@ -522,9 +477,9 @@ const PrintGroup = () => {
                         className="flex items-center self-end justify-center px-1 mr-1 font-bold text-red-900 border border-red-900 rounded-full w-fit bg-red-700/10"
                       >
                         <AlertTriangle
-                          size={`${baseFontSize * 0.7 * scale}px`}
+                          size={`${baseFontSize * 0.8 * scale}px`}
                         />
-                        Fragile
+                        <p className="flex items-center h-full">FRAGILE</p>
                       </div>
                     )}
                   </div>
