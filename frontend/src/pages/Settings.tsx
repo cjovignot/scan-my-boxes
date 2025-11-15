@@ -178,7 +178,7 @@ const Settings = () => {
                 {/* Nom et ID */}
                 <div className="p-3 border border-gray-700 rounded-lg">
                   <h3 className="mb-2 text-xs font-semibold text-yellow-400">
-                    Personnalisation
+                    Informations du modèle
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col">
